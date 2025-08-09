@@ -4,7 +4,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, LogOut, Settings, Users, FileCheck, DollarSign } from 'lucide-react';
+import { Home, LogOut, Settings, Users, FileCheck, DollarSign, UserSquare } from 'lucide-react';
 import {
   SidebarProvider,
   Sidebar,
@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  activePage: 'dashboard' | 'students' | 'admissions' | 'fees' | 'settings';
+  activePage: 'dashboard' | 'students' | 'teachers' | 'admissions' | 'fees' | 'settings';
 }
 
 export function AdminLayout({ children, activePage }: AdminLayoutProps) {
@@ -31,6 +31,7 @@ export function AdminLayout({ children, activePage }: AdminLayoutProps) {
   const menuItems = [
     { id: 'dashboard', href: '/admin/dashboard', icon: <Home />, label: 'Dashboard' },
     { id: 'students', href: '/admin/dashboard/students', icon: <Users />, label: 'Students' },
+    { id: 'teachers', href: '/admin/dashboard/teachers', icon: <UserSquare />, label: 'Teachers' },
     { id: 'admissions', href: '/admin/dashboard/admissions', icon: <FileCheck />, label: 'Admissions' },
     { id: 'fees', href: '/admin/dashboard/fees', icon: <DollarSign />, label: 'Fees' },
     { id: 'settings', href: '/admin/dashboard/settings', icon: <Settings />, label: 'Settings' },
