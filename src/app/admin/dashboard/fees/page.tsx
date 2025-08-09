@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { MoreHorizontal, PlusCircle, Loader2, CalendarIcon } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, CalendarIcon, CheckCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -95,12 +95,21 @@ export default function FeeManagementPage() {
   }, [router, fetchData]);
 
 
-  const handleAction = (action: string) => {
-    toast({
-      title: "Action Triggered",
-      description: `${action} is not yet implemented.`,
-    });
-  }
+  const handleMarkAsPaid = async (feeId: string) => {
+    const feeToUpdate = fees.find(f => f.id === feeId);
+    if (!feeToUpdate) return;
+    
+    feeToUpdate.status = 'Paid';
+    feeToUpdate.paymentDate = new Date().toISOString();
+
+    try {
+        await db.saveFees(fees); // Save the whole array
+        toast({ title: 'Success', description: `Fee slip ${feeId} marked as paid.` });
+        await fetchData(); // Refresh data
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to update fee status.' });
+    }
+  };
   
   const onSubmit = async (data: FeeFormValues) => {
     const selectedStudent = students.find(s => s.Roll_Number === data.studentRollNumber);
@@ -206,10 +215,15 @@ export default function FeeManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleAction('View Details')}>View Details</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAction('Mark as Paid')}>Mark as Paid</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAction('Send Reminder')}>Send Reminder</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Delete Fee')}>Delete</DropdownMenuItem>
+                        {fee.status !== 'Paid' && (
+                            <DropdownMenuItem onClick={() => handleMarkAsPaid(fee.id)}>
+                                <CheckCircle className="mr-2 h-4 w-4"/>
+                                Mark as Paid
+                            </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem disabled>View Details</DropdownMenuItem>
+                        <DropdownMenuItem disabled>Send Reminder</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" disabled>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>

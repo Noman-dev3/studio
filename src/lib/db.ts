@@ -43,6 +43,7 @@ export interface Fee {
   amount: number;
   dueDate: string; // ISO String
   status: 'Paid' | 'Pending' | 'Overdue';
+  paymentDate?: string; // ISO String
 }
 
 
@@ -53,6 +54,20 @@ export interface StudentResult {
   percentage: number;
   grade: string;
   position?: '1st' | '2nd' | '3rd' | 'No Position';
+}
+
+export interface Admission {
+  id: string;
+  studentName: string;
+  dob: string; // ISO String
+  grade: string;
+  parentName: string;
+  parentEmail: string;
+  parentPhone: string;
+  previousSchool?: string;
+  comments?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  applicationDate: string; // ISO String
 }
 
 
@@ -126,6 +141,10 @@ export const db = {
     saveToLocalStorage('fees', fees);
     return Promise.resolve();
   },
+  saveFees: async (fees: Fee[]): Promise<void> => {
+    saveToLocalStorage('fees', fees);
+    return Promise.resolve();
+  },
 
 
   // === Result Methods ===
@@ -178,6 +197,18 @@ export const db = {
     saveToLocalStorage('results', results);
     return Promise.resolve();
   },
+
+  // === Admission Methods ===
+  getAdmissions: async (): Promise<Admission[]> => {
+    return Promise.resolve(getFromLocalStorage<Admission[]>('admissions', []));
+  },
+  saveAdmission: async (admission: Admission): Promise<void> => {
+    const admissions = await db.getAdmissions();
+    admissions.push(admission);
+    saveToLocalStorage('admissions', admissions);
+    return Promise.resolve();
+  },
+
 
   // === General Settings ===
   getSetting: async (key: string): Promise<string | null> => {

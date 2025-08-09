@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { MoreHorizontal } from 'lucide-react';
+import { format } from 'date-fns';
 import {
   Table,
   TableBody,
@@ -23,18 +24,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/components/layout/admin-layout';
-
-const admissions: any[] = [];
+import { db, type Admission } from '@/lib/db';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdmissionManagementPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [admissions, setAdmissions] = React.useState<Admission[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
+  const fetchAdmissions = React.useCallback(async () => {
+    setIsLoading(true);
+    try {
+        const admissionData = await db.getAdmissions();
+        // Sort by most recent first
+        admissionData.sort((a, b) => new Date(b.applicationDate).getTime() - new Date(a.applicationDate).getTime());
+        setAdmissions(admissionData);
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch admission applications.' });
+    } finally {
+        setIsLoading(false);
+    }
+  }, [toast]);
+  
   React.useEffect(() => {
     const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/admin/login');
+    } else {
+        fetchAdmissions();
     }
-  }, [router]);
+  }, [router, fetchAdmissions]);
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -47,6 +67,13 @@ export default function AdmissionManagementPage() {
       default:
         return 'outline';
     }
+  }
+
+  const handleAction = (action: string) => {
+    toast({
+      title: "Action Triggered",
+      description: `${action} is not yet implemented.`,
+    });
   }
 
   return (
@@ -74,7 +101,11 @@ export default function AdmissionManagementPage() {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {admissions.length === 0 ? (
+                {isLoading ? (
+                    <TableRow>
+                        <TableCell colSpan={7} className="h-24 text-center">Loading applications...</TableCell>
+                    </TableRow>
+                ) : admissions.length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
                     No new admission applications.
@@ -87,7 +118,7 @@ export default function AdmissionManagementPage() {
                     <TableCell>{admission.studentName}</TableCell>
                     <TableCell>{admission.grade}</TableCell>
                     <TableCell>{admission.parentName}</TableCell>
-                    <TableCell>{admission.submitted}</TableCell>
+                    <TableCell>{format(new Date(admission.applicationDate), 'PPP')}</TableCell>
                     <TableCell>
                     <Badge variant={getStatusVariant(admission.status) as any}>
                         {admission.status}
@@ -103,9 +134,9 @@ export default function AdmissionManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Application</DropdownMenuItem>
-                        <DropdownMenuItem>Approve</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Reject</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('View Application')}>View Application</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('Approve')}>Approve</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Reject')}>Reject</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>

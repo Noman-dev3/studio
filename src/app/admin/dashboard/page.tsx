@@ -6,12 +6,16 @@ import { useRouter } from 'next/navigation';
 import { BarChart, Home, Users, FileCheck, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { db, Student } from '@/lib/db';
+import { db, Student, Admission, Fee } from '@/lib/db';
+import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
+
 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [students, setStudents] = React.useState<Student[]>([]);
-  const [newApplications, setNewApplications] = React.useState(0);
+  const [admissions, setAdmissions] = React.useState<Admission[]>([]);
+  const [fees, setFees] = React.useState<Fee[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
     const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
@@ -21,20 +25,75 @@ export default function AdminDashboardPage() {
     }
 
     async function fetchData() {
-        const studentData = await db.getStudents();
-        setStudents(studentData);
-        // Placeholder for new applications count
-        setNewApplications(0); 
+        setIsLoading(true);
+        try {
+            const [studentData, admissionData, feeData] = await Promise.all([
+                db.getStudents(),
+                db.getAdmissions(),
+                db.getFees()
+            ]);
+            setStudents(studentData);
+            setAdmissions(admissionData);
+            setFees(feeData);
+        } catch (error) {
+            console.error("Failed to fetch dashboard data:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }
     fetchData();
 
   }, [router]);
 
+  const stats = React.useMemo(() => {
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const newApplications = admissions.filter(a => a.status === 'Pending').length;
+    
+    const monthlyRevenue = fees
+        .filter(f => f.status === 'Paid' && new Date(f.paymentDate!).getMonth() === currentMonth && new Date(f.paymentDate!).getFullYear() === currentYear)
+        .reduce((acc, f) => acc + f.amount, 0);
+
+    const feesOverdue = fees.filter(f => f.status === 'Overdue' || (f.status === 'Pending' && new Date(f.dueDate) < now)).length;
+    
+    return {
+      totalStudents: students.length,
+      newApplications,
+      monthlyRevenue,
+      feesOverdue
+    };
+  }, [students, admissions, fees]);
+  
+  const chartData = React.useMemo(() => {
+    const data: { name: string, total: number }[] = [];
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    
+    fees.filter(f => f.status === 'Paid').forEach(fee => {
+      const date = new Date(fee.paymentDate!);
+      const month = date.getMonth();
+      const monthName = months[month];
+      const year = date.getFullYear();
+      const chartLabel = `${monthName} ${year}`;
+      
+      const existingEntry = data.find(d => d.name === chartLabel);
+      if (existingEntry) {
+        existingEntry.total += fee.amount;
+      } else {
+        data.push({ name: chartLabel, total: fee.amount });
+      }
+    });
+    
+    return data.slice(-6); // show last 6 months of revenue
+  }, [fees]);
+
+
   const dashboardItems = [
-    { title: 'Total Students', value: students.length.toString(), icon: <Users className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'New Applications', value: newApplications.toString(), icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'Revenue (Monthly)', value: 'PKR 0', icon: <BarChart className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'Fees Overdue', value: '0', icon: <DollarSign className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Total Students', value: isLoading ? '...' : stats.totalStudents.toString(), icon: <Users className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'New Applications', value: isLoading ? '...' : stats.newApplications.toString(), icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Revenue (This Month)', value: isLoading ? '...' : `PKR ${stats.monthlyRevenue.toLocaleString()}`, icon: <BarChart className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Fees Overdue', value: isLoading ? '...' : stats.feesOverdue.toString(), icon: <DollarSign className="h-6 w-6 text-muted-foreground" /> },
   ];
 
   return (
@@ -58,10 +117,35 @@ export default function AdminDashboardPage() {
         ))}
         </div>
 
-        <div className="mt-10">
-            <h2 className="text-2xl font-bold text-primary mb-4">Recent Activity</h2>
-            <Card className="shadow-lg">
-                <CardContent className="p-6">
+        <div className="mt-10 grid gap-6 lg:grid-cols-5">
+            <Card className="lg:col-span-3 shadow-lg">
+                 <CardHeader>
+                    <CardTitle>Revenue Overview</CardTitle>
+                    <CardDescription>Last 6 months of fee collection.</CardDescription>
+                </CardHeader>
+                <CardContent className="h-[300px] w-full">
+                    {isLoading ? <p>Loading chart...</p> : 
+                    <ResponsiveContainer width="100%" height="100%">
+                         <RechartsBarChart data={chartData}>
+                            <XAxis dataKey="name" stroke="#888888" fontSize={12} tickLine={false} axisLine={false}/>
+                            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `PKR ${value / 1000}k`}/>
+                            <Tooltip
+                                contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))' }}
+                                labelStyle={{ color: 'hsl(var(--foreground))' }}
+                                formatter={(value) => [`PKR ${Number(value).toLocaleString()}`, 'Revenue']}
+                            />
+                            <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                        </RechartsBarChart>
+                    </ResponsiveContainer>
+                    }
+                </CardContent>
+            </Card>
+             <Card className="lg:col-span-2 shadow-lg">
+                <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                    <CardDescription>Latest admissions and payments.</CardDescription>
+                </CardHeader>
+                <CardContent>
                     <p className="text-muted-foreground">No recent activity to display.</p>
                 </CardContent>
             </Card>
