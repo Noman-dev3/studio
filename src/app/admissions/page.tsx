@@ -38,9 +38,18 @@ export default function AdmissionsPage() {
   });
 
   const onSubmit = (data: AdmissionFormValues) => {
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_ADMISSION_TEMPLATE_ID!;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_ADMISSION_TEMPLATE_ID;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
+
+    if (!serviceId || !templateId || !publicKey || templateId === 'YOUR_ADMISSION_FORM_TEMPLATE_ID_HERE') {
+      toast({
+        variant: 'destructive',
+        title: 'Configuration Error',
+        description: 'Admission form is not configured. Please add Template ID.',
+      });
+      return;
+    }
     
     // Format the data to match the EmailJS template variables
     const templateParams = {
