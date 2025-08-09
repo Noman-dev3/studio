@@ -219,5 +219,3 @@ export const db = {
     return Promise.resolve();
   }
 };
-
-    
