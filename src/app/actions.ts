@@ -6,7 +6,7 @@ import { smartSearch, type SmartSearchInput } from '@/ai/flows/smart-search';
 import { sendMail } from '@/lib/mail';
 import { format } from 'date-fns';
 import { db, type Admission, Student, Teacher } from '@/lib/db';
-import { admissionFormSchema, contactFormSchema } from '@/lib/schemas';
+import { contactFormSchema } from '@/lib/schemas';
 
 export async function submitContactForm(data: unknown) {
   const parsed = contactFormSchema.safeParse(data);
@@ -45,9 +45,18 @@ export async function submitContactForm(data: unknown) {
   }
 }
 
-const serverAdmissionFormSchema = admissionFormSchema.extend({
-  dob: z.string(),
+// The server receives the date as a string, so we define a schema for the server-side validation.
+const serverAdmissionFormSchema = z.object({
+  studentName: z.string().min(2, "Student's name is required."),
+  dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format." }),
+  grade: z.string({ required_error: 'Please select a grade.' }),
+  parentName: z.string().min(2, "Parent's name is required."),
+  parentEmail: z.string().email('Please enter a valid email.'),
+  parentPhone: z.string().min(10, 'Please enter a valid phone number.'),
+  previousSchool: z.string().optional(),
+  comments: z.string().optional(),
 });
+
 
 export async function submitAdmissionForm(data: unknown) {
   const parsed = serverAdmissionFormSchema.safeParse(data);
