@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
-import { submitContactForm } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 import { contactFormSchema } from '@/lib/schemas';
+import emailjs from '@emailjs/browser';
+import * as React from 'react';
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
@@ -22,21 +23,27 @@ export function Contact() {
     defaultValues: { name: '', email: '', subject: '', message: '' },
   });
 
-  const onSubmit = async (data: ContactFormValues) => {
-    const result = await submitContactForm(data);
-    if (result.success) {
-      toast({
-        title: 'Success!',
-        description: result.message,
+  const onSubmit = (data: ContactFormValues) => {
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_CONTACT_TEMPLATE_ID!;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
+
+    emailjs.send(serviceId, templateId, data, publicKey)
+      .then(() => {
+        toast({
+          title: 'Success!',
+          description: "Your message has been sent successfully.",
+        });
+        form.reset();
+      })
+      .catch((error) => {
+        console.error('EmailJS Error:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'Something went wrong. Please try again later.',
+        });
       });
-      form.reset();
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: result.message || 'Something went wrong.',
-      });
-    }
   };
 
   return (

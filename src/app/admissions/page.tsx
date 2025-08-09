@@ -18,8 +18,8 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
-import { submitAdmissionForm } from '@/app/actions';
 import { admissionFormSchema } from '@/lib/schemas';
+import emailjs from '@emailjs/browser';
 
 type AdmissionFormValues = z.infer<typeof admissionFormSchema>;
 
@@ -37,28 +37,33 @@ export default function AdmissionsPage() {
     }
   });
 
-  const onSubmit = async (data: AdmissionFormValues) => {
-    // Convert date to ISO string before sending to the server action
-    const dataWithISOString = {
-      ...data,
-      dob: data.dob.toISOString(),
-    };
+  const onSubmit = (data: AdmissionFormValues) => {
+    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
+    const templateId = process.env.NEXT_PUBLIC_EMAILJS_ADMISSION_TEMPLATE_ID!;
+    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
     
-    const result = await submitAdmissionForm(dataWithISOString);
+    // Format the data to match the EmailJS template variables
+    const templateParams = {
+        ...data,
+        dob: format(data.dob, "PPP"), // Format date for readability in email
+    };
 
-    if (result.success) {
-      toast({
-        title: 'Application Submitted!',
-        description: result.message,
-      });
-      form.reset();
-    } else {
+    emailjs.send(serviceId, templateId, templateParams, publicKey)
+      .then(() => {
         toast({
-            variant: "destructive",
-            title: "Submission Failed",
-            description: result.message || "An unexpected error occurred.",
+          title: 'Application Submitted!',
+          description: "We've received your application and will be in touch soon.",
         });
-    }
+        form.reset();
+      })
+      .catch((error) => {
+          console.error('EmailJS Error:', error);
+          toast({
+              variant: "destructive",
+              title: "Submission Failed",
+              description: "An unexpected error occurred. Please try again later.",
+          });
+      });
   };
 
   return (
