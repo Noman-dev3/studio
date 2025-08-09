@@ -3,108 +3,69 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart, Home, LogOut, Settings, Users, FileCheck, DollarSign } from 'lucide-react';
+import { BarChart, Home, Users, FileCheck, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { PiissLogo } from '@/components/icons/piiss-logo';
-import Link from 'next/link';
-import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+import { AdminLayout } from '@/components/layout/admin-layout';
+import { db, Student } from '@/lib/db';
 
 export default function AdminDashboardPage() {
   const router = useRouter();
+  const [students, setStudents] = React.useState<Student[]>([]);
+  const [newApplications, setNewApplications] = React.useState(0);
 
   React.useEffect(() => {
     const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/admin/login');
+      return;
     }
+
+    async function fetchData() {
+        const studentData = await db.getStudents();
+        setStudents(studentData);
+        // Placeholder for new applications count
+        setNewApplications(0); 
+    }
+    fetchData();
+
   }, [router]);
 
-  const handleLogout = () => {
-    sessionStorage.removeItem('isAdminAuthenticated');
-    router.push('/admin/login');
-  };
-
   const dashboardItems = [
-    { title: 'Total Students', value: '0', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'New Applications', value: '0', icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Total Students', value: students.length.toString(), icon: <Users className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'New Applications', value: newApplications.toString(), icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
     { title: 'Revenue (Monthly)', value: 'PKR 0', icon: <BarChart className="h-6 w-6 text-muted-foreground" /> },
     { title: 'Fees Overdue', value: '0', icon: <DollarSign className="h-6 w-6 text-muted-foreground" /> },
   ];
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen bg-background">
-        <Sidebar>
-            <div className="p-4 mb-4">
-                 <Link href="/">
-                    <PiissLogo className="h-10 w-auto" />
-                </Link>
-            </div>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild isActive>
-                <Link href="/admin/dashboard"><Home /> Dashboard</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin/dashboard/students"><Users /> Students</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin/dashboard/admissions"><FileCheck /> Admissions</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin/dashboard/fees"><DollarSign /> Fees</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/admin/dashboard/settings"><Settings /> Settings</Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          <div className="mt-auto p-4">
-            <Button variant="destructive" className="w-full" onClick={handleLogout}>
-              <LogOut /> Logout
-            </Button>
-          </div>
-        </Sidebar>
+    <AdminLayout activePage="dashboard">
+        <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold text-primary">Admin Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, Admin!</p>
+        </div>
 
-        <main className="flex-1 p-6 md:p-10">
-          <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold text-primary">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Welcome back, Admin!</p>
-          </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {dashboardItems.map(item => (
+            <Card key={item.title} className="shadow-lg hover:shadow-2xl transition-shadow">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
+                {item.icon}
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{item.value}</div>
+            </CardContent>
+            </Card>
+        ))}
+        </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {dashboardItems.map(item => (
-              <Card key={item.title} className="shadow-lg hover:shadow-2xl transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{item.title}</CardTitle>
-                  {item.icon}
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{item.value}</div>
+        <div className="mt-10">
+            <h2 className="text-2xl font-bold text-primary mb-4">Recent Activity</h2>
+            <Card className="shadow-lg">
+                <CardContent className="p-6">
+                    <p className="text-muted-foreground">No recent activity to display.</p>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="mt-10">
-              <h2 className="text-2xl font-bold text-primary mb-4">Recent Activity</h2>
-              <Card className="shadow-lg">
-                  <CardContent className="p-6">
-                      <p className="text-muted-foreground">No recent activity to display.</p>
-                  </CardContent>
-              </Card>
-          </div>
-        </main>
-      </div>
-    </SidebarProvider>
+            </Card>
+        </div>
+    </AdminLayout>
   );
 }
