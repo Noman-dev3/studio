@@ -26,13 +26,8 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 
-// Placeholder fee data
-const fees = [
-  { id: 'F001', studentName: 'Ahmed Ali', grade: 'Grade 5', amount: 5000, status: 'Paid', dueDate: '2024-05-10' },
-  { id: 'F002', studentName: 'Fatima Khan', grade: 'Grade 3', amount: 4500, status: 'Pending', dueDate: '2024-06-10' },
-  { id: 'F003', studentName: 'Zainab Omar', grade: 'Grade 8', amount: 6000, status: 'Overdue', dueDate: '2024-04-10' },
-  { id: 'F004', studentName: 'Bilal Yusuf', grade: 'Grade 1', amount: 4000, status: 'Paid', dueDate: '2024-05-10' },
-];
+// Placeholder fee data has been removed.
+const fees: any[] = [];
 
 export default function FeeManagementPage() {
   const router = useRouter();
@@ -128,7 +123,14 @@ export default function FeeManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {fees.map((fee) => (
+                {fees.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No fee records found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  fees.map((fee) => (
                   <TableRow key={fee.id}>
                     <TableCell className="font-medium">{fee.id}</TableCell>
                     <TableCell>{fee.studentName}</TableCell>
@@ -158,7 +160,7 @@ export default function FeeManagementPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
           </CardContent>

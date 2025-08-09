@@ -91,11 +91,11 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="hero-title">Headline</Label>
-                        <Input id="hero-title" defaultValue="Excellence in Education, Rooted in Faith" />
+                        <Input id="hero-title" placeholder="Excellence in Education, Rooted in Faith" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="hero-subtitle">Sub-headline</Label>
-                        <Textarea id="hero-subtitle" defaultValue="Nurturing young minds to become future leaders through a blend of world-class academics and timeless Islamic values." />
+                        <Textarea id="hero-subtitle" placeholder="Nurturing young minds to become future leaders..." />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="hero-image">Hero Background Image</Label>
@@ -114,16 +114,16 @@ export default function SettingsPage() {
                     <div className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="contact-email">Email</Label>
-                            <Input id="contact-email" type="email" defaultValue="contact@piiss.edu" />
+                            <Input id="contact-email" type="email" placeholder="contact@piiss.edu" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="contact-phone">Phone Number</Label>
-                            <Input id="contact-phone" defaultValue="+1 (234) 567-890" />
+                            <Input id="contact-phone" placeholder="+1 (234) 567-890" />
                         </div>
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="contact-address">Address</Label>
-                        <Input id="contact-address" defaultValue="123 Education Lane, Knowledge City, 12345" />
+                        <Input id="contact-address" placeholder="123 Education Lane, Knowledge City, 12345" />
                     </div>
                 </CardContent>
             </Card>

@@ -25,14 +25,8 @@ import { PiissLogo } from '@/components/icons/piiss-logo';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
-// Placeholder student data
-const students = [
-  { id: 'S001', name: 'Ahmed Ali', grade: 'Grade 5', status: 'Active', registered: '2023-01-15' },
-  { id: 'S002', name: 'Fatima Khan', grade: 'Grade 3', status: 'Active', registered: '2023-02-20' },
-  { id: 'S003', name: 'Zainab Omar', grade: 'Grade 8', status: 'Inactive', registered: '2022-09-01' },
-  { id: 'S004', name: 'Bilal Yusuf', grade: 'Grade 1', status: 'Active', registered: '2024-03-10' },
-  { id: 'S005', name: 'Aisha Siddiqui', grade: 'Grade 10', status: 'Graduated', registered: '2020-08-25' },
-];
+// Placeholder student data has been removed.
+const students: any[] = [];
 
 export default function StudentManagementPage() {
   const router = useRouter();
@@ -110,7 +104,14 @@ export default function StudentManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
+                {students.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No students found. Add a new student to get started.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  students.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell className="font-medium">{student.id}</TableCell>
                     <TableCell>{student.name}</TableCell>
@@ -138,7 +139,7 @@ export default function StudentManagementPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
           </CardContent>

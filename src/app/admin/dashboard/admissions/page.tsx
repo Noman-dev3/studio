@@ -25,13 +25,8 @@ import { PiissLogo } from '@/components/icons/piiss-logo';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
-// Placeholder admission data
-const admissions = [
-  { id: 'A001', studentName: 'Hassan Iqbal', grade: 'Grade 1', parentName: 'Iqbal Ahmed', status: 'Pending', submitted: '2024-05-20' },
-  { id: 'A002', studentName: 'Ayesha Jamil', grade: 'Grade 5', parentName: 'Jamil Khan', status: 'Approved', submitted: '2024-05-18' },
-  { id: 'A003', studentName: 'Saad Farooq', grade: 'Nursery', parentName: 'Farooq Ali', status: 'Pending', submitted: '2024-05-22' },
-  { id: 'A004', studentName: 'Mariam Baig', grade: 'Grade 8', parentName: 'Mirza Baig', status: 'Rejected', submitted: '2024-05-15' },
-];
+// Placeholder admission data has been removed.
+const admissions: any[] = [];
 
 export default function AdmissionManagementPage() {
   const router = useRouter();
@@ -119,7 +114,14 @@ export default function AdmissionManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {admissions.map((admission) => (
+                {admissions.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center">
+                      No new admission applications.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  admissions.map((admission) => (
                   <TableRow key={admission.id}>
                     <TableCell className="font-medium">{admission.id}</TableCell>
                     <TableCell>{admission.studentName}</TableCell>
@@ -148,7 +150,7 @@ export default function AdmissionManagementPage() {
                       </DropdownMenu>
                     </TableCell>
                   </TableRow>
-                ))}
+                )))}
               </TableBody>
             </Table>
           </CardContent>
