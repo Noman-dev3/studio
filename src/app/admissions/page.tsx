@@ -59,7 +59,7 @@ export default function AdmissionsPage() {
         return;
     }
       
-    const result = await submitAdmissionForm({ ...data, recipientEmail });
+    const result = await submitAdmissionForm(data, recipientEmail);
     if (result.success) {
       toast({
         title: 'Application Submitted!',

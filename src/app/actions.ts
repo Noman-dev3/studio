@@ -12,17 +12,16 @@ const contactFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
   subject: z.string().min(5, { message: 'Subject must be at least 5 characters.' }),
   message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
-  recipientEmail: z.string().email(),
 });
 
-export async function submitContactForm(data: unknown) {
+export async function submitContactForm(data: unknown, recipientEmail: string | null) {
   const parsed = contactFormSchema.safeParse(data);
 
   if (!parsed.success) {
     return { success: false, message: 'Invalid form data.', errors: parsed.error.flatten().fieldErrors };
   }
 
-  const { name, email, subject, message, recipientEmail } = parsed.data;
+  const { name, email, subject, message } = parsed.data;
 
   if (!recipientEmail) {
     console.error('Contact email is not set in admin settings.');
@@ -64,17 +63,16 @@ const admissionFormSchema = z.object({
   parentPhone: z.string().min(10, 'Please enter a valid phone number.'),
   previousSchool: z.string().optional(),
   comments: z.string().optional(),
-  recipientEmail: z.string().email(),
 });
 
-export async function submitAdmissionForm(data: unknown) {
+export async function submitAdmissionForm(data: unknown, recipientEmail: string | null) {
   const parsed = admissionFormSchema.safeParse(data);
 
   if (!parsed.success) {
     return { success: false, message: 'Invalid form data.', errors: parsed.error.flatten().fieldErrors };
   }
   
-  const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments, recipientEmail } = parsed.data;
+  const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
   
   if (!recipientEmail) {
     console.error('Contact email is not set in admin settings for admissions.');

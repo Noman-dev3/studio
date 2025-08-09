@@ -41,7 +41,7 @@ export function Contact() {
         return;
     }
 
-    const result = await submitContactForm({ ...data, recipientEmail });
+    const result = await submitContactForm(data, recipientEmail);
     if (result.success) {
       toast({
         title: 'Success!',
