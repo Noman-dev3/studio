@@ -37,6 +37,14 @@ export default function AdmissionsPage() {
   const { toast } = useToast();
   const form = useForm<AdmissionFormValues>({
     resolver: zodResolver(admissionFormSchema),
+    defaultValues: {
+        studentName: '',
+        parentName: '',
+        parentEmail: '',
+        parentPhone: '',
+        previousSchool: '',
+        comments: '',
+    }
   });
 
   const onSubmit = async (data: AdmissionFormValues) => {
