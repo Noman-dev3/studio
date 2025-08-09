@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Check, X, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import {
   Table,
@@ -20,24 +20,34 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, type Admission } from '@/lib/db';
 import { useToast } from '@/hooks/use-toast';
+import { updateAdmissionStatus } from '@/app/actions';
 
 export default function AdmissionManagementPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [admissions, setAdmissions] = React.useState<Admission[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isViewing, setIsViewing] = React.useState(false);
+  const [selectedAdmission, setSelectedAdmission] = React.useState<Admission | null>(null);
 
   const fetchAdmissions = React.useCallback(async () => {
     setIsLoading(true);
     try {
         const admissionData = await db.getAdmissions();
-        // Sort by most recent first
         admissionData.sort((a, b) => new Date(b.applicationDate).getTime() - new Date(a.applicationDate).getTime());
         setAdmissions(admissionData);
     } catch (error) {
@@ -68,13 +78,22 @@ export default function AdmissionManagementPage() {
         return 'outline';
     }
   }
-
-  const handleAction = (action: string) => {
-    toast({
-      title: "Action Triggered",
-      description: `${action} is not yet implemented.`,
-    });
+  
+  const handleViewApplication = (admission: Admission) => {
+    setSelectedAdmission(admission);
+    setIsViewing(true);
   }
+
+  const handleUpdateStatus = async (admissionId: string, status: 'Approved' | 'Rejected') => {
+    const result = await updateAdmissionStatus(admissionId, status);
+    if(result.success) {
+        toast({ title: 'Success', description: result.message });
+        await fetchAdmissions();
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
+  };
+
 
   return (
     <AdminLayout activePage="admissions">
@@ -134,9 +153,15 @@ export default function AdmissionManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleAction('View Application')}>View Application</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleAction('Approve')}>Approve</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Reject')}>Reject</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewApplication(admission)}>
+                          <Eye className="mr-2 h-4 w-4"/> View Application
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateStatus(admission.id, 'Approved')}>
+                           <Check className="mr-2 h-4 w-4"/> Approve
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleUpdateStatus(admission.id, 'Rejected')}>
+                           <X className="mr-2 h-4 w-4"/> Reject
+                        </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>
@@ -146,6 +171,33 @@ export default function AdmissionManagementPage() {
             </Table>
         </CardContent>
         </Card>
+
+        <Dialog open={isViewing} onOpenChange={setIsViewing}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Application Details</DialogTitle>
+                    <DialogDescription>
+                        Reviewing application for {selectedAdmission?.studentName}
+                    </DialogDescription>
+                </DialogHeader>
+                {selectedAdmission && (
+                    <div className="space-y-4 py-4 text-sm">
+                        <p><strong>Student:</strong> {selectedAdmission.studentName}</p>
+                        <p><strong>Date of Birth:</strong> {format(new Date(selectedAdmission.dob), 'PPP')}</p>
+                        <p><strong>Grade:</strong> {selectedAdmission.grade}</p>
+                        <p><strong>Parent:</strong> {selectedAdmission.parentName}</p>
+                        <p><strong>Email:</strong> {selectedAdmission.parentEmail}</p>
+                        <p><strong>Phone:</strong> {selectedAdmission.parentPhone}</p>
+                        <p><strong>Previous School:</strong> {selectedAdmission.previousSchool || 'N/A'}</p>
+                        <p><strong>Comments:</strong> {selectedAdmission.comments || 'N/A'}</p>
+                    </div>
+                )}
+                <DialogFooter>
+                    <Button onClick={() => setIsViewing(false)}>Close</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
     </AdminLayout>
   );
 }

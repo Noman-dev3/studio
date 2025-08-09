@@ -99,132 +99,132 @@ const saveToLocalStorage = <T>(key: string, value: T) => {
 }
 
 // --- Data Access Functions ---
+const fns = {
+  // === Student Methods ===
+  getStudents: async (): Promise<Student[]> => {
+    return getFromLocalStorage<Student[]>('students', []);
+  },
+  saveStudents: async (students: Student[]): Promise<void> => {
+    saveToLocalStorage('students', students);
+  },
+  deleteStudent: async (rollNumber: string): Promise<void> => {
+    let students = await fns.getStudents();
+    students = students.filter(s => s.Roll_Number !== rollNumber);
+    saveToLocalStorage('students', students);
+  },
 
-// === Student Methods ===
-const getStudents = async (): Promise<Student[]> => {
-  return getFromLocalStorage<Student[]>('students', []);
-};
-const saveStudents = async (students: Student[]): Promise<void> => {
-  saveToLocalStorage('students', students);
+  // === Teacher Methods ===
+  getTeachers: async (): Promise<Teacher[]> => {
+    return getFromLocalStorage<Teacher[]>('teachers', []);
+  },
+  saveTeachers: async (teachers: Teacher[]): Promise<void> => {
+    saveToLocalStorage('teachers', teachers);
+  },
+  deleteTeacher: async (teacherId: string): Promise<void> => {
+    let teachers = await fns.getTeachers();
+    teachers = teachers.filter(t => t.Teacher_ID !== teacherId);
+    saveToLocalStorage('teachers', teachers);
+  },
+
+  // === Topper Methods ===
+  getToppers: async (): Promise<Topper[]> => {
+    return getFromLocalStorage<Topper[]>('toppers', []);
+  },
+  saveToppers: async (toppers: Topper[]): Promise<void> => {
+    saveToLocalStorage('toppers', toppers);
+  },
+
+  // === Fee Methods ===
+  getFees: async (): Promise<Fee[]> => {
+    return getFromLocalStorage<Fee[]>('fees', []);
+  },
+  saveFee: async (fee: Fee): Promise<void> => {
+    const fees = await fns.getFees();
+    const existingIndex = fees.findIndex(f => f.id === fee.id);
+    if (existingIndex !== -1) {
+      fees[existingIndex] = fee;
+    } else {
+      fees.push(fee);
+    }
+    saveToLocalStorage('fees', fees);
+  },
+  saveFees: async (fees: Fee[]): Promise<void> => {
+    saveToLocalStorage('fees', fees);
+  },
+  deleteFee: async (feeId: string): Promise<void> => {
+    let fees = await fns.getFees();
+    fees = fees.filter(f => f.id !== feeId);
+    saveToLocalStorage('fees', fees);
+  },
+
+
+  // === Result Methods ===
+  getResults: async (): Promise<StudentResult[]> => {
+      return getFromLocalStorage<StudentResult[]>('results', []);
+  },
+  getResultsForClass: async (className: string): Promise<StudentResult[]> => {
+    const allResults = await fns.getResults();
+    const allStudents = await fns.getStudents();
+    const studentIdsInClass = allStudents
+        .filter(s => s.Class === className)
+        .map(s => s.Roll_Number);
+    
+    return allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber));
+  },
+  saveResult: async (result: StudentResult): Promise<void> => {
+    let results = await fns.getResults();
+    const allStudents = await fns.getStudents();
+    const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
+    if (existingIndex !== -1) {
+        results[existingIndex] = result;
+    } else {
+        results.push(result);
+    }
+
+    const student = allStudents.find(s => s.Roll_Number === result.studentRollNumber);
+    if (student) {
+        const classResults = await fns.getResultsForClass(student.Class);
+        classResults.sort((a, b) => b.percentage - a.percentage);
+        
+        const positionMap: { [key: string]: '1st' | '2nd' | '3rd' | 'No Position' } = {};
+        
+        if(classResults.length > 0) positionMap[classResults[0].studentRollNumber] = '1st';
+        if(classResults.length > 1) positionMap[classResults[1].studentRollNumber] = '2nd';
+        if(classResults.length > 2) positionMap[classResults[2].studentRollNumber] = '3rd';
+
+        results = results.map(r => {
+            const studentForPos = allStudents.find(s => s.Roll_Number === r.studentRollNumber);
+            if (studentForPos?.Class === student.Class) {
+                return { ...r, position: positionMap[r.studentRollNumber] || 'No Position' };
+            }
+            return r;
+        });
+    }
+    
+    saveToLocalStorage('results', results);
+  },
+
+  // === Admission Methods ===
+  getAdmissions: async (): Promise<Admission[]> => {
+    return getFromLocalStorage<Admission[]>('admissions', []);
+  },
+  saveAdmission: async (admission: Admission): Promise<void> => {
+    const admissions = await fns.getAdmissions();
+    admissions.push(admission);
+    saveToLocalStorage('admissions', admissions);
+  },
+  saveAdmissions: async (admissions: Admission[]): Promise<void> => {
+      saveToLocalStorage('admissions', admissions);
+  },
+
+
+  // === General Settings ===
+  getSetting: async (key: string): Promise<string | null> => {
+      return getFromLocalStorage<string | null>(`setting_${key}`, null);
+  },
+  saveSetting: async (key: string, value: string): Promise<void> => {
+      saveToLocalStorage(`setting_${key}`, value);
+  },
 };
 
-// === Teacher Methods ===
-const getTeachers = async (): Promise<Teacher[]> => {
-  return getFromLocalStorage<Teacher[]>('teachers', []);
-};
-const saveTeachers = async (teachers: Teacher[]): Promise<void> => {
-  saveToLocalStorage('teachers', teachers);
-};
-
-// === Topper Methods ===
-const getToppers = async (): Promise<Topper[]> => {
-  return getFromLocalStorage<Topper[]>('toppers', []);
-};
-const saveToppers = async (toppers: Topper[]): Promise<void> => {
-  saveToLocalStorage('toppers', toppers);
-};
-
-// === Fee Methods ===
-const getFees = async (): Promise<Fee[]> => {
-  return getFromLocalStorage<Fee[]>('fees', []);
-};
-const saveFee = async (fee: Fee): Promise<void> => {
-  const fees = await getFees();
-  const existingIndex = fees.findIndex(f => f.id === fee.id);
-  if (existingIndex !== -1) {
-    fees[existingIndex] = fee;
-  } else {
-    fees.push(fee);
-  }
-  saveToLocalStorage('fees', fees);
-};
-const saveFees = async (fees: Fee[]): Promise<void> => {
-  saveToLocalStorage('fees', fees);
-};
-
-// === Result Methods ===
-const getResults = async (): Promise<StudentResult[]> => {
-    return getFromLocalStorage<StudentResult[]>('results', []);
-};
-
-const getResultsForClass = async (className: string): Promise<StudentResult[]> => {
-  const allResults = await getResults();
-  const allStudents = await getStudents();
-  const studentIdsInClass = allStudents
-      .filter(s => s.Class === className)
-      .map(s => s.Roll_Number);
-  
-  return allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber));
-};
-
-const saveResult = async (result: StudentResult): Promise<void> => {
-  let results = await getResults();
-  const allStudents = await getStudents();
-  const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
-  if (existingIndex !== -1) {
-      results[existingIndex] = result;
-  } else {
-      results.push(result);
-  }
-
-  const student = allStudents.find(s => s.Roll_Number === result.studentRollNumber);
-  if (student) {
-      const classResults = await getResultsForClass(student.Class);
-      classResults.sort((a, b) => b.percentage - a.percentage);
-      
-      const positionMap: { [key: string]: '1st' | '2nd' | '3rd' | 'No Position' } = {};
-      
-      if(classResults.length > 0) positionMap[classResults[0].studentRollNumber] = '1st';
-      if(classResults.length > 1) positionMap[classResults[1].studentRollNumber] = '2nd';
-      if(classResults.length > 2) positionMap[classResults[2].studentRollNumber] = '3rd';
-
-      results = results.map(r => {
-          const studentForPos = allStudents.find(s => s.Roll_Number === r.studentRollNumber);
-          if (studentForPos?.Class === student.Class) {
-              return { ...r, position: positionMap[r.studentRollNumber] || 'No Position' };
-          }
-          return r;
-      });
-  }
-  
-  saveToLocalStorage('results', results);
-};
-
-// === Admission Methods ===
-const getAdmissions = async (): Promise<Admission[]> => {
-  return getFromLocalStorage<Admission[]>('admissions', []);
-};
-const saveAdmission = async (admission: Admission): Promise<void> => {
-  const admissions = await getAdmissions();
-  admissions.push(admission);
-  saveToLocalStorage('admissions', admissions);
-};
-
-// === General Settings ===
-const getSetting = async (key: string): Promise<string | null> => {
-    return getFromLocalStorage<string | null>(`setting_${key}`, null);
-};
-const saveSetting = async (key: string, value: string): Promise<void> => {
-    saveToLocalStorage(`setting_${key}`, value);
-};
-
-// --- Export the db object ---
-
-export const db = {
-  getStudents,
-  saveStudents,
-  getTeachers,
-  saveTeachers,
-  getToppers,
-  saveToppers,
-  getFees,
-  saveFee,
-  saveFees,
-  getResults,
-  getResultsForClass,
-  saveResult,
-  getAdmissions,
-  saveAdmission,
-  getSetting,
-  saveSetting,
-};
+export const db = fns;

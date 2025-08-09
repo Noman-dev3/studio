@@ -7,7 +7,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { format } from 'date-fns';
-import { MoreHorizontal, PlusCircle, Loader2, CalendarIcon, CheckCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Loader2, CalendarIcon, CheckCircle, Trash2 } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import {
   Dialog,
@@ -32,6 +33,17 @@ import {
   DialogFooter,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from '@/components/ui/alert-dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -45,6 +57,7 @@ import { AdminLayout } from '@/components/layout/admin-layout';
 import { useToast } from '@/hooks/use-toast';
 import { db, type Fee, type Student } from '@/lib/db';
 import { cn } from '@/lib/utils';
+import { deleteFee } from '@/app/actions';
 
 
 const feeFormSchema = z.object({
@@ -111,6 +124,16 @@ export default function FeeManagementPage() {
     }
   };
   
+  const handleDelete = async (feeId: string) => {
+    const result = await deleteFee(feeId);
+    if(result.success) {
+      toast({ title: 'Success', description: result.message });
+      await fetchData();
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
+    }
+  };
+
   const onSubmit = async (data: FeeFormValues) => {
     const selectedStudent = students.find(s => s.Roll_Number === data.studentRollNumber);
     if (!selectedStudent) {
@@ -221,9 +244,27 @@ export default function FeeManagementPage() {
                                 Mark as Paid
                             </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem disabled>View Details</DropdownMenuItem>
-                        <DropdownMenuItem disabled>Send Reminder</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" disabled>Delete</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4"/> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the fee slip.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(fee.id)}>Continue</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>

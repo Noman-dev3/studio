@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { MoreHorizontal, Edit, Save, X } from 'lucide-react';
+import { MoreHorizontal, Edit, Save, X, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 import {
@@ -21,14 +21,27 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, type Teacher } from '@/lib/db';
+import { deleteTeacher } from '@/app/actions';
+
 
 export default function TeacherManagementPage() {
   const router = useRouter();
@@ -81,6 +94,16 @@ export default function TeacherManagementPage() {
         toast({ variant: 'destructive', title: 'Error', description: 'Failed to save name change.' });
     } finally {
         handleCancelEdit();
+    }
+  };
+
+  const handleDelete = async (teacherId: string) => {
+    const result = await deleteTeacher(teacherId);
+    if(result.success) {
+      toast({ title: 'Success', description: result.message });
+      await fetchTeachers();
+    } else {
+      toast({ variant: 'destructive', title: 'Error', description: result.message });
     }
   };
 
@@ -166,8 +189,27 @@ export default function TeacherManagementPage() {
                         <DropdownMenuItem onClick={() => handleEditClick(teacher)}>
                             <Edit className="mr-2 h-4 w-4" /> Edit Name
                         </DropdownMenuItem>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4"/> Delete
+                            </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete the teacher's record.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDelete(teacher.Teacher_ID)}>Continue</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>
