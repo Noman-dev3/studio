@@ -117,6 +117,7 @@ export const db = {
 
   saveResult: async (result: StudentResult): Promise<void> => {
     let results = await db.getResults();
+    const allStudents = await db.getStudents();
     const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
     if (existingIndex !== -1) {
         results[existingIndex] = result;
@@ -125,7 +126,7 @@ export const db = {
     }
 
     // After saving, recalculate positions for the entire class
-    const student = (await db.getStudents()).find(s => s.Roll_Number === result.studentRollNumber);
+    const student = allStudents.find(s => s.Roll_Number === result.studentRollNumber);
     if (student) {
         const classResults = await db.getResultsForClass(student.Class);
         // Sort by percentage descending
