@@ -159,8 +159,8 @@ export default function StudentManagementPage() {
                     </TableCell>
                 </TableRow>
                 ) : (
-                students.map((student) => (
-                <TableRow key={student.id}>
+                students.map((student, index) => (
+                <TableRow key={`${student.id}-${index}`}>
                     <TableCell className="font-medium">{student.id}</TableCell>
                     <TableCell>{student.name}</TableCell>
                     <TableCell>{student.grade}</TableCell>
