@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -5,7 +6,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { PiissLogo } from '@/components/icons/piiss-logo';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { SmartSearch } from '@/components/smart-search';
 import { cn } from '@/lib/utils';
 
@@ -59,17 +60,18 @@ export function Header() {
                   <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left">
+              <SheetContent side="left" className="p-0">
+                <SheetHeader className="flex flex-row items-center justify-between p-4 border-b">
+                    <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+                        <PiissLogo className="h-8 w-auto" />
+                    </Link>
+                    <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                    <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
+                        <X className="h-6 w-6" />
+                        <span className="sr-only">Close menu</span>
+                    </Button>
+                </SheetHeader>
                 <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between p-4 border-b">
-                        <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-                            <PiissLogo className="h-8 w-auto" />
-                        </Link>
-                        <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>
-                            <X className="h-6 w-6" />
-                            <span className="sr-only">Close menu</span>
-                        </Button>
-                    </div>
                     <nav className="flex-grow p-4">
                         <ul className="space-y-4">
                             {navLinks.map((link) => (
