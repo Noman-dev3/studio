@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -66,8 +67,8 @@ export function Teachers() {
                 <CardContent className="p-0">
                     <div className="aspect-square overflow-hidden">
                     <Image
-                        src={(teacher as any).Photo_Path || (teacher as any).image}
-                        alt={`Photo of ${teacher.Name || teacher.name}`}
+                        src={(teacher as any).Photo_Path || (teacher as any).image || `https://placehold.co/400x400.png?text=${(teacher.Name || (teacher as any).name).charAt(0)}`}
+                        alt={`Photo of ${teacher.Name || (teacher as any).name}`}
                         width={400}
                         height={400}
                         className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
