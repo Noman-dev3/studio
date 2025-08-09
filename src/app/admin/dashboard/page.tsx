@@ -24,17 +24,18 @@ export default function AdminDashboardPage() {
     router.push('/admin/login');
   };
 
+  // Placeholder data removed. In a real app, you would fetch this from a database.
   const dashboardItems = [
-    { title: 'Total Students', value: '1,200', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'New Applications', value: '52', icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'Revenue (Monthly)', value: '$50,000', icon: <BarChart className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'Site Visitors', value: '12,345', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Total Students', value: '0', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'New Applications', value: '0', icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Revenue (Monthly)', value: 'PKR 0', icon: <BarChart className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'Fees Overdue', value: '0', icon: <DollarSign className="h-6 w-6 text-muted-foreground" /> },
   ];
 
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="w-64 bg-secondary text-secondary-foreground p-4 flex flex-col">
+      <aside className="w-64 bg-secondary text-secondary-foreground p-4 flex flex-col hidden md:flex">
         <div className="mb-8">
             <Link href="/">
                 <PiissLogo className="h-10 w-auto" />
