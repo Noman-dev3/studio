@@ -31,7 +31,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
       <aside className="w-64 bg-secondary text-secondary-foreground p-4 flex flex-col">
         <div className="mb-8">
@@ -40,14 +40,17 @@ export default function AdminDashboardPage() {
             </Link>
         </div>
         <nav className="flex-1 space-y-2">
-            <Button variant="ghost" className="w-full justify-start text-lg">
-              <Home className="mr-4" /> Dashboard
+            <Button variant="ghost" asChild className="w-full justify-start text-lg">
+                <Link href="/admin/dashboard"><Home className="mr-4" /> Dashboard</Link>
             </Button>
-             <Button variant="ghost" className="w-full justify-start text-lg">
-              <Users className="mr-4" /> Admissions
+             <Button variant="ghost" asChild className="w-full justify-start text-lg">
+                <Link href="/admin/dashboard/students"><Users className="mr-4" /> Students</Link>
             </Button>
-             <Button variant="ghost" className="w-full justify-start text-lg">
-              <Settings className="mr-4" /> Settings
+             <Button variant="ghost" asChild className="w-full justify-start text-lg">
+              <Link href="/admin/dashboard/admissions"><Users className="mr-4" /> Admissions</Link>
+            </Button>
+             <Button variant="ghost" asChild className="w-full justify-start text-lg">
+              <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>
             </Button>
         </nav>
         <div className="mt-auto">
@@ -58,7 +61,7 @@ export default function AdminDashboardPage() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10 bg-background">
+      <main className="flex-1 p-6 md:p-10">
         <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-primary">Admin Dashboard</h1>
             <p className="text-muted-foreground">Welcome back, Admin!</p>
