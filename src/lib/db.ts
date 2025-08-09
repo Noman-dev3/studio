@@ -130,8 +130,8 @@ export const db = {
   getFees: async (): Promise<Fee[]> => {
     return Promise.resolve(getFromLocalStorage<Fee[]>('fees', []));
   },
-  saveFee: async (fee: Fee): Promise<void> => {
-    const fees = await db.getFees();
+  saveFee: async function(fee: Fee): Promise<void> {
+    const fees = await this.getFees();
     const existingIndex = fees.findIndex(f => f.id === fee.id);
     if (existingIndex !== -1) {
       fees[existingIndex] = fee;
@@ -148,13 +148,13 @@ export const db = {
 
 
   // === Result Methods ===
-  getResults: async (): Promise<StudentResult[]> => {
+  getResults: async function(): Promise<StudentResult[]> {
     return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
   },
 
-  getResultsForClass: async(className: string): Promise<StudentResult[]> => {
-    const allResults = await db.getResults();
-    const allStudents = await db.getStudents();
+  getResultsForClass: async function(className: string): Promise<StudentResult[]> {
+    const allResults = await this.getResults();
+    const allStudents = await this.getStudents();
     const studentIdsInClass = allStudents
         .filter(s => s.Class === className)
         .map(s => s.Roll_Number);
@@ -162,9 +162,9 @@ export const db = {
     return allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber));
   },
 
-  saveResult: async (result: StudentResult): Promise<void> => {
-    let results = await db.getResults();
-    const allStudents = await db.getStudents();
+  saveResult: async function(result: StudentResult): Promise<void> {
+    let results = await this.getResults();
+    const allStudents = await this.getStudents();
     const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
     if (existingIndex !== -1) {
         results[existingIndex] = result;
@@ -175,7 +175,7 @@ export const db = {
     // After saving, recalculate positions for the entire class
     const student = allStudents.find(s => s.Roll_Number === result.studentRollNumber);
     if (student) {
-        const classResults = await db.getResultsForClass(student.Class);
+        const classResults = await this.getResultsForClass(student.Class);
         // Sort by percentage descending
         classResults.sort((a, b) => b.percentage - a.percentage);
         
@@ -199,11 +199,11 @@ export const db = {
   },
 
   // === Admission Methods ===
-  getAdmissions: async (): Promise<Admission[]> => {
+  getAdmissions: async function(): Promise<Admission[]> {
     return Promise.resolve(getFromLocalStorage<Admission[]>('admissions', []));
   },
-  saveAdmission: async (admission: Admission): Promise<void> => {
-    const admissions = await db.getAdmissions();
+  saveAdmission: async function(admission: Admission): Promise<void> {
+    const admissions = await this.getAdmissions();
     admissions.push(admission);
     saveToLocalStorage('admissions', admissions);
     return Promise.resolve();
@@ -219,3 +219,5 @@ export const db = {
     return Promise.resolve();
   }
 };
+
+    
