@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { submitAdmissionForm } from '@/app/actions';
+import { db } from '@/lib/db';
 
 const admissionFormSchema = z.object({
   studentName: z.string().min(2, "Student's name is required."),
@@ -48,7 +49,17 @@ export default function AdmissionsPage() {
   });
 
   const onSubmit = async (data: AdmissionFormValues) => {
-    const result = await submitAdmissionForm(data);
+    const recipientEmail = await db.getSetting('contactEmail');
+    if (!recipientEmail) {
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: "The admin contact email is not set. Please contact an administrator.",
+        });
+        return;
+    }
+      
+    const result = await submitAdmissionForm({ ...data, recipientEmail });
     if (result.success) {
       toast({
         title: 'Application Submitted!',

@@ -12,6 +12,7 @@ const contactFormSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
   subject: z.string().min(5, { message: 'Subject must be at least 5 characters.' }),
   message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
+  recipientEmail: z.string().email(),
 });
 
 export async function submitContactForm(data: unknown) {
@@ -21,17 +22,16 @@ export async function submitContactForm(data: unknown) {
     return { success: false, message: 'Invalid form data.', errors: parsed.error.flatten().fieldErrors };
   }
 
-  const { name, email, subject, message } = parsed.data;
-  const to = await db.getSetting('contactEmail');
+  const { name, email, subject, message, recipientEmail } = parsed.data;
 
-  if (!to) {
+  if (!recipientEmail) {
     console.error('Contact email is not set in admin settings.');
     return { success: false, message: 'Server is not configured to receive contact emails. Please contact an administrator.' };
   }
 
   try {
     await sendMail({
-      to,
+      to: recipientEmail,
       subject: `New Contact Form Submission: ${subject}`,
       text: `Name: ${name}\\nEmail: ${email}\\n\\nMessage:\\n${message}`,
       html: `
@@ -64,6 +64,7 @@ const admissionFormSchema = z.object({
   parentPhone: z.string().min(10, 'Please enter a valid phone number.'),
   previousSchool: z.string().optional(),
   comments: z.string().optional(),
+  recipientEmail: z.string().email(),
 });
 
 export async function submitAdmissionForm(data: unknown) {
@@ -73,10 +74,9 @@ export async function submitAdmissionForm(data: unknown) {
     return { success: false, message: 'Invalid form data.', errors: parsed.error.flatten().fieldErrors };
   }
   
-  const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
-  const to = await db.getSetting('contactEmail');
+  const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments, recipientEmail } = parsed.data;
   
-  if (!to) {
+  if (!recipientEmail) {
     console.error('Contact email is not set in admin settings for admissions.');
     return { success: false, message: 'Server is not configured to receive admission emails. Please contact an administrator.' };
   }
@@ -148,7 +148,7 @@ export async function submitAdmissionForm(data: unknown) {
     `;
 
     await sendMail({
-      to,
+      to: recipientEmail,
       subject: `New Admission Application for ${studentName} - Grade ${grade}`,
       text: textContent,
       html: htmlContent,

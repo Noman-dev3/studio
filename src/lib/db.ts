@@ -18,8 +18,9 @@ export interface Teacher {
   Teacher_ID: string;
   Contact: string;
   Salary: string;
-  Photo_Path: string; // Stored as ISO string
+  Photo_Path: string;
   Date_Joined: string; // Stored as ISO string
+  isDummy?: boolean;
 }
 
 export interface Topper {
@@ -100,34 +101,34 @@ const saveToLocalStorage = <T>(key: string, value: T) => {
 
 export const db = {
   // === Student Methods ===
-  getStudents: async (): Promise<Student[]> => {
+  getStudents: async function(): Promise<Student[]> {
     return Promise.resolve(getFromLocalStorage<Student[]>('students', []));
   },
-  saveStudents: async (students: Student[]): Promise<void> => {
+  saveStudents: async function(students: Student[]): Promise<void> {
     saveToLocalStorage('students', students);
     return Promise.resolve();
   },
 
   // === Teacher Methods ===
-  getTeachers: async (): Promise<Teacher[]> => {
+  getTeachers: async function(): Promise<Teacher[]> {
     return Promise.resolve(getFromLocalStorage<Teacher[]>('teachers', []));
   },
-  saveTeachers: async (teachers: Teacher[]): Promise<void> => {
+  saveTeachers: async function(teachers: Teacher[]): Promise<void> {
     saveToLocalStorage('teachers', teachers);
     return Promise.resolve();
   },
 
   // === Topper Methods ===
-  getToppers: async (): Promise<Topper[]> => {
+  getToppers: async function(): Promise<Topper[]> {
     return Promise.resolve(getFromLocalStorage<Topper[]>('toppers', []));
   },
-  saveToppers: async (toppers: Topper[]): Promise<void> => {
+  saveToppers: async function(toppers: Topper[]): Promise<void> {
     saveToLocalStorage('toppers', toppers);
     return Promise.resolve();
   },
 
   // === Fee Methods ===
-  getFees: async (): Promise<Fee[]> => {
+  getFees: async function(): Promise<Fee[]> {
     return Promise.resolve(getFromLocalStorage<Fee[]>('fees', []));
   },
   saveFee: async function(fee: Fee): Promise<void> {
@@ -141,7 +142,7 @@ export const db = {
     saveToLocalStorage('fees', fees);
     return Promise.resolve();
   },
-  saveFees: async (fees: Fee[]): Promise<void> => {
+  saveFees: async function(fees: Fee[]): Promise<void> {
     saveToLocalStorage('fees', fees);
     return Promise.resolve();
   },
@@ -211,10 +212,10 @@ export const db = {
 
 
   // === General Settings ===
-  getSetting: async (key: string): Promise<string | null> => {
+  getSetting: async function(key: string): Promise<string | null> {
     return Promise.resolve(getFromLocalStorage<string | null>(`setting_${key}`, null));
   },
-  saveSetting: async (key: string, value: string): Promise<void> => {
+  saveSetting: async function(key: string, value: string): Promise<void> {
     saveToLocalStorage(`setting_${key}`, value);
     return Promise.resolve();
   }

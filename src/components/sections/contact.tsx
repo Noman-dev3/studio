@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -11,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { submitContactForm } from '@/app/actions';
 import { Loader2 } from 'lucide-react';
 import * as React from 'react';
+import { db } from '@/lib/db';
 
 const contactFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -29,7 +31,17 @@ export function Contact() {
   });
 
   const onSubmit = async (data: ContactFormValues) => {
-    const result = await submitContactForm(data);
+    const recipientEmail = await db.getSetting('contactEmail');
+    if (!recipientEmail) {
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: "The admin contact email is not set. Please contact an administrator.",
+        });
+        return;
+    }
+
+    const result = await submitContactForm({ ...data, recipientEmail });
     if (result.success) {
       toast({
         title: 'Success!',
