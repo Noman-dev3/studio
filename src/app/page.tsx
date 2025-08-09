@@ -9,6 +9,7 @@ import { Testimonials } from "@/components/sections/testimonials";
 import { Events } from "@/components/sections/events";
 import { Location } from "@/components/sections/location";
 import { Contact } from "@/components/sections/contact";
+import { Toppers } from "@/components/sections/toppers";
 
 export default function Home() {
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       <main className="flex-1">
         <Hero />
         <Announcements />
+        <Toppers />
         <About />
         <Teachers />
         <Gallery />

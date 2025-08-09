@@ -1,7 +1,7 @@
 
 'use client';
 
-// This file simulates a database using local storage for students and teachers.
+// This file simulates a database using local storage.
 // In a real-world application, you would replace this with a connection to a real database.
 
 export interface Student {
@@ -20,6 +20,13 @@ export interface Teacher {
   Salary: string;
   Photo_Path: string;
   Date_Joined: string; // Stored as ISO string
+}
+
+export interface Topper {
+    id: string;
+    name: string;
+    grade: string;
+    marks: string;
 }
 
 // Helper function to safely access local storage
@@ -65,6 +72,24 @@ export const db = {
   },
   saveTeachers: async (teachers: Teacher[]): Promise<void> => {
     saveToLocalStorage('teachers', teachers);
+    return Promise.resolve();
+  },
+
+  // === Topper Methods ===
+  getToppers: async (): Promise<Topper[]> => {
+    return Promise.resolve(getFromLocalStorage<Topper[]>('toppers', []));
+  },
+  saveToppers: async (toppers: Topper[]): Promise<void> => {
+    saveToLocalStorage('toppers', toppers);
+    return Promise.resolve();
+  },
+
+  // === General Settings ===
+  getSetting: async (key: string): Promise<string | null> => {
+    return Promise.resolve(getFromLocalStorage<string | null>(key, null));
+  },
+  saveSetting: async (key: string, value: string): Promise<void> => {
+    saveToLocalStorage(key, value);
     return Promise.resolve();
   }
 };
