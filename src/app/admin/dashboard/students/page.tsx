@@ -175,7 +175,7 @@ export default function StudentManagementPage() {
                                 <FormItem><FormLabel>Parent's Email</FormLabel><FormControl><Input type="email" placeholder="e.g., parent@example.com" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                             <FormField control={form.control} name="parentPhone" render={({ field }) => (
-                                <FormItem><FormLabel>Parent's Phone</FormLabel><FormControl><Input placeholder="e.g., +1234567890" {...field} /></FormControl><FormMessage /></FormMessage>
+                                <FormItem><FormLabel>Parent's Phone</FormLabel><FormControl><Input placeholder="e.g., +1234567890" {...field} /></FormControl><FormMessage /></FormItem>
                             )}/>
                             <DialogFooter>
                                 <Button type="submit" variant="destructive" disabled={form.formState.isSubmitting}>
