@@ -6,13 +6,7 @@ import { smartSearch, type SmartSearchInput } from '@/ai/flows/smart-search';
 import { sendMail } from '@/lib/mail';
 import { format } from 'date-fns';
 import { db, type Admission, Student, Teacher } from '@/lib/db';
-
-const contactFormSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  email: z.string().email({ message: 'Please enter a valid email.' }),
-  subject: z.string().min(5, { message: 'Subject must be at least 5 characters.' }),
-  message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
-});
+import { admissionFormSchema, contactFormSchema } from '@/lib/schemas';
 
 export async function submitContactForm(data: unknown) {
   const parsed = contactFormSchema.safeParse(data);
@@ -23,7 +17,6 @@ export async function submitContactForm(data: unknown) {
 
   const { name, email, subject, message } = parsed.data;
 
-  // This now works because it reads from server-side environment variables.
   const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
 
   try {
@@ -52,20 +45,12 @@ export async function submitContactForm(data: unknown) {
   }
 }
 
-const admissionFormSchema = z.object({
-  studentName: z.string().min(2, "Student's name is required."),
-  dob: z.string({ required_error: 'Date of birth is required.' }), // Expect a string
-  grade: z.string({ required_error: 'Please select a grade.' }),
-  parentName: z.string().min(2, "Parent's name is required."),
-  parentEmail: z.string().email('Please enter a valid email.'),
-  parentPhone: z.string().min(10, 'Please enter a valid phone number.'),
-  previousSchool: z.string().optional(),
-  comments: z.string().optional(),
+const serverAdmissionFormSchema = admissionFormSchema.extend({
+  dob: z.string(),
 });
 
-
 export async function submitAdmissionForm(data: unknown) {
-  const parsed = admissionFormSchema.safeParse(data);
+  const parsed = serverAdmissionFormSchema.safeParse(data);
 
   if (!parsed.success) {
     return { success: false, message: 'Invalid form data.', errors: parsed.error.flatten().fieldErrors };
@@ -73,7 +58,6 @@ export async function submitAdmissionForm(data: unknown) {
   
   const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
   
-  // This now works because it reads from server-side environment variables.
   const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
   
   const dateOfBirth = new Date(dob);
