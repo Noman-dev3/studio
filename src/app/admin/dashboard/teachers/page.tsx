@@ -4,7 +4,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Edit, Save, X } from 'lucide-react';
+import Image from 'next/image';
 
 import {
   Table,
@@ -24,16 +25,18 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, type Teacher } from '@/lib/db';
-import Image from 'next/image';
 
 export default function TeacherManagementPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [teachers, setTeachers] = React.useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [editingTeacherId, setEditingTeacherId] = React.useState<string | null>(null);
+  const [editingName, setEditingName] = React.useState('');
 
   const fetchTeachers = React.useCallback(async () => {
     setIsLoading(true);
@@ -55,6 +58,32 @@ export default function TeacherManagementPage() {
     }
     fetchTeachers();
   }, [router, fetchTeachers]);
+
+  const handleEditClick = (teacher: Teacher) => {
+    setEditingTeacherId(teacher.Teacher_ID);
+    setEditingName(teacher.Name);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingTeacherId(null);
+    setEditingName('');
+  };
+
+  const handleSaveName = async (teacherId: string) => {
+    const updatedTeachers = teachers.map(t => 
+        t.Teacher_ID === teacherId ? { ...t, Name: editingName } : t
+    );
+    try {
+        await db.saveTeachers(updatedTeachers);
+        setTeachers(updatedTeachers);
+        toast({ title: 'Success', description: "Teacher's name updated." });
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to save name change.' });
+    } finally {
+        handleCancelEdit();
+    }
+  };
+
 
   return (
     <AdminLayout activePage="teachers">
@@ -94,8 +123,8 @@ export default function TeacherManagementPage() {
                     </TableCell>
                 </TableRow>
                 ) : (
-                teachers.map((teacher, index) => (
-                <TableRow key={`${teacher.Teacher_ID}-${index}`}>
+                teachers.map((teacher) => (
+                <TableRow key={teacher.Teacher_ID}>
                     <TableCell>
                       <Image 
                         src={teacher.Photo_Path || `https://placehold.co/40x40.png?text=${teacher.Name.charAt(0)}`} 
@@ -106,7 +135,21 @@ export default function TeacherManagementPage() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{teacher.Teacher_ID}</TableCell>
-                    <TableCell>{teacher.Name}</TableCell>
+                    <TableCell>
+                      {editingTeacherId === teacher.Teacher_ID ? (
+                        <div className="flex items-center gap-2">
+                           <Input 
+                                value={editingName} 
+                                onChange={(e) => setEditingName(e.target.value)}
+                                className="h-8"
+                            />
+                            <Button size="icon" className="h-8 w-8" onClick={() => handleSaveName(teacher.Teacher_ID)}><Save className="h-4 w-4"/></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancelEdit}><X className="h-4 w-4"/></Button>
+                        </div>
+                      ) : (
+                        teacher.Name
+                      )}
+                    </TableCell>
                     <TableCell>{teacher.Contact}</TableCell>
                     <TableCell>{teacher.Salary}</TableCell>
                     <TableCell>{format(new Date(teacher.Date_Joined), "PPP")}</TableCell>
@@ -120,7 +163,9 @@ export default function TeacherManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit Name</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEditClick(teacher)}>
+                            <Edit className="mr-2 h-4 w-4" /> Edit Name
+                        </DropdownMenuItem>
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                         </DropdownMenuContent>

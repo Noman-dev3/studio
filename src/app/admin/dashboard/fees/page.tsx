@@ -1,10 +1,9 @@
 
-
 'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -23,7 +22,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { AdminLayout } from '@/components/layout/admin-layout';
 
 const fees: any[] = [];

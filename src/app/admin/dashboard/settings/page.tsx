@@ -8,13 +8,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
+import { db } from '@/lib/db';
+import Papa from 'papaparse';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const studentsFileRef = React.useRef<HTMLInputElement>(null);
+  const teachersFileRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
@@ -29,6 +32,35 @@ export default function SettingsPage() {
         description: "Your changes have been successfully saved.",
     });
   };
+
+  const handleFileUpload = (file: File | undefined, type: 'students' | 'teachers') => {
+    if (!file) {
+        toast({ variant: "destructive", title: "Upload Failed", description: "Please select a file to upload." });
+        return;
+    }
+
+    Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: async (results) => {
+            try {
+                if (type === 'students') {
+                    await db.saveStudents(results.data as any);
+                    toast({ title: "Success", description: "Students data has been uploaded and saved." });
+                } else {
+                    await db.saveTeachers(results.data as any);
+                    toast({ title: "Success", description: "Teachers data has been uploaded and saved." });
+                }
+            } catch (error) {
+                 toast({ variant: "destructive", title: "Save Failed", description: "There was an error saving the data." });
+            }
+        },
+        error: (error) => {
+            toast({ variant: "destructive", title: "Parsing Error", description: `Failed to parse CSV file: ${error.message}` });
+        }
+    });
+  };
+
 
   return (
     <AdminLayout activePage="settings">
@@ -49,9 +81,16 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                         <Label htmlFor="students-csv">Students Data</Label>
                         <div className="flex items-center gap-2">
-                            <Input id="students-csv" type="file" accept=".csv" />
-                            <Button>
-                                <Upload className="mr-2 h-4 w-4" /> Upload
+                            <Input 
+                                id="students-csv" 
+                                type="file" 
+                                accept=".csv" 
+                                ref={studentsFileRef}
+                                onChange={(e) => handleFileUpload(e.target.files?.[0], 'students')}
+                                className="hidden" 
+                            />
+                            <Button onClick={() => studentsFileRef.current?.click()}>
+                                <Upload className="mr-2 h-4 w-4" /> Upload CSV
                             </Button>
                         </div>
                          <p className="text-sm text-muted-foreground">
@@ -61,9 +100,16 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                         <Label htmlFor="teachers-csv">Teachers Data</Label>
                          <div className="flex items-center gap-2">
-                            <Input id="teachers-csv" type="file" accept=".csv" />
-                             <Button>
-                                <Upload className="mr-2 h-4 w-4" /> Upload
+                             <Input 
+                                id="teachers-csv" 
+                                type="file" 
+                                accept=".csv" 
+                                ref={teachersFileRef}
+                                onChange={(e) => handleFileUpload(e.target.files?.[0], 'teachers')}
+                                className="hidden"
+                            />
+                             <Button onClick={() => teachersFileRef.current?.click()}>
+                                <Upload className="mr-2 h-4 w-4" /> Upload CSV
                             </Button>
                         </div>
                         <p className="text-sm text-muted-foreground">
