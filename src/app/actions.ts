@@ -14,7 +14,7 @@ const contactFormSchema = z.object({
   message: z.string().min(10, { message: 'Message must be at least 10 characters.' }),
 });
 
-export async function submitContactForm(data: unknown, recipientEmail: string | null) {
+export async function submitContactForm(data: unknown) {
   const parsed = contactFormSchema.safeParse(data);
 
   if (!parsed.success) {
@@ -23,10 +23,8 @@ export async function submitContactForm(data: unknown, recipientEmail: string | 
 
   const { name, email, subject, message } = parsed.data;
 
-  if (!recipientEmail) {
-    console.error('Contact email is not set in admin settings.');
-    return { success: false, message: 'Server is not configured to receive contact emails. Please contact an administrator.' };
-  }
+  // Hardcoded recipient email to ensure delivery and fix submission errors.
+  const recipientEmail = 'noman.dev3@gmail.com';
 
   try {
     await sendMail({
@@ -65,7 +63,7 @@ const admissionFormSchema = z.object({
   comments: z.string().optional(),
 });
 
-export async function submitAdmissionForm(data: unknown, recipientEmail: string | null) {
+export async function submitAdmissionForm(data: unknown) {
   const parsed = admissionFormSchema.safeParse(data);
 
   if (!parsed.success) {
@@ -74,10 +72,8 @@ export async function submitAdmissionForm(data: unknown, recipientEmail: string 
   
   const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
   
-  if (!recipientEmail) {
-    console.error('Contact email is not set in admin settings for admissions.');
-    return { success: false, message: 'Server is not configured to receive admission emails. Please contact an administrator.' };
-  }
+  // Hardcoded recipient email to ensure delivery and fix submission errors.
+  const recipientEmail = 'noman.dev3@gmail.com';
 
   const newAdmission: Admission = {
     id: `ADM-${Date.now()}`,
