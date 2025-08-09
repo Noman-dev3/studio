@@ -63,6 +63,12 @@ export default function TeacherManagementPage() {
 
   const form = useForm<TeacherFormValues>({
     resolver: zodResolver(teacherFormSchema),
+    defaultValues: {
+      name: '',
+      subject: '',
+      email: '',
+      phone: '',
+    },
   });
 
   const fetchTeachers = React.useCallback(async () => {
