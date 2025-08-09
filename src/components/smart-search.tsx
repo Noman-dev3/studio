@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -19,13 +20,20 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Loader2, Search, BrainCircuit, AlertTriangle, CheckCircle } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from './ui/separator';
+import { Badge } from './ui/badge';
 
 const searchSchema = z.object({
   query: z.string().min(3, { message: 'Search query must be at least 3 characters.' }),
 });
 
 type SearchFormValues = z.infer<typeof searchSchema>;
+
+const exampleQueries = [
+    "What is the mission of the school?",
+    "How do I apply for admission?",
+    "What classes are offered?",
+    "Tell me about upcoming events.",
+]
 
 export function SmartSearch() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -37,6 +45,11 @@ export function SmartSearch() {
     resolver: zodResolver(searchSchema),
     defaultValues: { query: '' },
   });
+  
+  const handleExampleQueryClick = (query: string) => {
+    form.setValue('query', query);
+    form.handleSubmit(onSubmit)();
+  }
 
   const onSubmit = async (data: SearchFormValues) => {
     setIsLoading(true);
@@ -100,21 +113,19 @@ export function SmartSearch() {
           </form>
         </Form>
         
-        <div className="mt-4 min-h-[200px]">
-          {isLoading && (
+        <div className="mt-4 min-h-[250px]">
+          {isLoading ? (
             <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
               <Loader2 className="h-8 w-8 animate-spin mb-2" />
-              <p>Searching...</p>
+              <p>Searching for the best answer...</p>
             </div>
-          )}
-          {error && (
+          ) : error ? (
             <div className="flex flex-col items-center justify-center h-full text-destructive bg-destructive/10 p-4 rounded-md">
               <AlertTriangle className="h-8 w-8 mb-2" />
               <p className="font-semibold">Search Failed</p>
               <p className="text-sm text-center">{error}</p>
             </div>
-          )}
-          {results && (
+          ) : results ? (
             <div className="space-y-4">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
                     <CheckCircle className="text-green-600"/>
@@ -131,6 +142,17 @@ export function SmartSearch() {
                         )}
                     </ul>
                 </ScrollArea>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center h-full text-muted-foreground text-center">
+                <p className="font-semibold mb-4">Try asking one of these questions:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                    {exampleQueries.map((q) => (
+                        <Button key={q} variant="outline" size="sm" onClick={() => handleExampleQueryClick(q)}>
+                            {q}
+                        </Button>
+                    ))}
+                </div>
             </div>
           )}
         </div>

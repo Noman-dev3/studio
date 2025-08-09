@@ -6,26 +6,32 @@ import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import * as React from 'react';
 import { db } from '@/lib/db';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function Location() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const position = { lat: 3.1390, lng: 101.6869 }; // Placeholder: Kuala Lumpur
+  const position = { lat: 24.8607, lng: 67.0011 }; // Placeholder: Karachi
 
   const [contactInfo, setContactInfo] = React.useState({ email: '', phone: '', address: '' });
+  const [isApiKeyMissing, setIsApiKeyMissing] = React.useState(false);
 
   React.useEffect(() => {
+    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
+        setIsApiKeyMissing(true);
+    }
+
     async function fetchContactInfo() {
       const email = await db.getSetting('contactEmail');
       const phone = await db.getSetting('contactPhone');
       const address = await db.getSetting('contactAddress');
       setContactInfo({
         email: email || 'contact@piiss.edu',
-        phone: phone || '+1 (234) 567-890',
-        address: address || '123 Education Lane, Knowledge City, 12345',
+        phone: phone || '+92 123 4567890',
+        address: address || '123 Education Road, Karachi, Pakistan',
       });
     }
     fetchContactInfo();
-  }, []);
+  }, [apiKey]);
 
   return (
     <section id="location" className="py-16 md:py-24 bg-secondary">
@@ -40,16 +46,22 @@ export function Location() {
         <Card className="overflow-hidden shadow-xl">
           <div className="grid md:grid-cols-3">
             <div className="md:col-span-2 h-96 md:h-full w-full">
-              {apiKey ? (
-                <APIProvider apiKey={apiKey}>
+              {isApiKeyMissing ? (
+                <div className="w-full h-full bg-muted flex items-center justify-center p-4">
+                  <Alert variant="destructive" className="max-w-sm">
+                    <MapPin className="h-4 w-4"/>
+                    <AlertTitle>Google Maps API Key is Missing</AlertTitle>
+                    <AlertDescription>
+                        Please add your Google Maps API key to the .env file to enable the map view.
+                    </AlertDescription>
+                  </Alert>
+                </div>
+              ) : (
+                <APIProvider apiKey={apiKey!}>
                   <Map defaultCenter={position} defaultZoom={14} mapId="piiss-school-map" className="w-full h-full">
                     <Marker position={position} />
                   </Map>
                 </APIProvider>
-              ) : (
-                <div className="w-full h-full bg-muted flex items-center justify-center">
-                  <p className="text-muted-foreground">Map is unavailable.</p>
-                </div>
               )}
             </div>
             <div className="p-8 bg-card flex flex-col justify-center">

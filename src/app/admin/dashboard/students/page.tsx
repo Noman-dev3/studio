@@ -52,6 +52,13 @@ export default function StudentManagementPage() {
     fetchStudents();
   }, [router, fetchStudents]);
 
+  const handleAction = (action: string) => {
+    toast({
+      title: "Action Triggered",
+      description: `${action} is not yet implemented.`,
+    });
+  }
+
 
   return (
     <AdminLayout activePage="students">
@@ -107,9 +114,9 @@ export default function StudentManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit Name</DropdownMenuItem>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('Edit Student')}>Edit</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('View Details')}>View Details</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Delete Student')}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>

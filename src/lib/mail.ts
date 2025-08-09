@@ -19,6 +19,8 @@ export async function sendMail({ to, subject, text, html }: MailOptions) {
     EMAIL_FROM,
   } = process.env;
 
+  const recipientEmail = 'noman.dev3@gmail.com'; // Hardcoded email address
+
   if (
     !EMAIL_SERVER_HOST ||
     !EMAIL_SERVER_PORT ||
@@ -29,9 +31,9 @@ export async function sendMail({ to, subject, text, html }: MailOptions) {
     console.warn('***************************************************************************');
     console.warn('** WARNING: Email server environment variables are not set.                **');
     console.warn('** Email submission will be simulated.                                     **');
-    console.warn('** To enable email sending, set up your email provider in the .env file.   **');
+    console.warn('** To enable real email sending, set up your provider in the .env file.    **');
     console.warn('***************************************************************************');
-    console.log(`Simulated email sent to: ${to}`);
+    console.log(`Simulated email sent to: ${recipientEmail}`);
     console.log(`Subject: ${subject}`);
     // In a real app, you might want to throw an error, but for this demo,
     // we will simulate success to allow the form to complete.
@@ -51,7 +53,7 @@ export async function sendMail({ to, subject, text, html }: MailOptions) {
   try {
     const info = await transporter.sendMail({
       from: EMAIL_FROM,
-      to,
+      to: recipientEmail, // Use the hardcoded email address
       subject,
       text,
       html,

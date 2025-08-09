@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, PlusCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -23,11 +23,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AdminLayout } from '@/components/layout/admin-layout';
+import { useToast } from '@/hooks/use-toast';
 
 const fees: any[] = [];
 
 export default function FeeManagementPage() {
   const router = useRouter();
+  const { toast } = useToast();
 
   React.useEffect(() => {
     const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
@@ -35,6 +37,13 @@ export default function FeeManagementPage() {
       router.replace('/admin/login');
     }
   }, [router]);
+
+  const handleAction = (action: string) => {
+    toast({
+      title: "Action Triggered",
+      description: `${action} is not yet implemented.`,
+    });
+  }
 
   const getStatusVariant = (status: string) => {
     switch (status) {
@@ -54,10 +63,14 @@ export default function FeeManagementPage() {
         <Card>
         <CardHeader>
             <div className="flex items-center justify-between">
-            <div>
-                <CardTitle>Fees Management</CardTitle>
-                <CardDescription>Track and manage student fee payments.</CardDescription>
-            </div>
+                <div>
+                    <CardTitle>Fees Management</CardTitle>
+                    <CardDescription>Create, track, and manage student fee payments.</CardDescription>
+                </div>
+                 <Button onClick={() => handleAction('Create Fee Slip')}>
+                    <PlusCircle className="mr-2 h-4 w-4"/>
+                    Create Fee Slip
+                </Button>
             </div>
         </CardHeader>
         <CardContent>
@@ -77,7 +90,7 @@ export default function FeeManagementPage() {
                 {fees.length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
-                    No fee records found.
+                    No fee records found. Click "Create Fee Slip" to start.
                     </TableCell>
                 </TableRow>
                 ) : (
@@ -103,10 +116,10 @@ export default function FeeManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>View Details</DropdownMenuItem>
-                        <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
-                        <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('View Details')}>View Details</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('Mark as Paid')}>Mark as Paid</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleAction('Send Reminder')}>Send Reminder</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleAction('Delete Fee')}>Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>
