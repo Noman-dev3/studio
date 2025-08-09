@@ -16,7 +16,7 @@ export function About() {
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
             <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight">
-              Welcome to Premier International Islamic School
+              Welcome to Pakistan Islamic International School System
             </h2>
             <p className="text-lg text-muted-foreground">
               At PIISS, we are dedicated to providing a balanced and comprehensive education that integrates academic excellence with profound Islamic values. Our mission is to nurture a new generation of leaders who are knowledgeable, pious, and ready to contribute positively to the global community.

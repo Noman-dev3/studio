@@ -41,7 +41,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-border text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} Premier International Islamic School. All Rights Reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Pakistan Islamic International School System. All Rights Reserved.</p>
         </div>
       </div>
     </footer>

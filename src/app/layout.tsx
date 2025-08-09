@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'PIISS - Premier International Islamic School',
+  title: 'PIISS - Pakistan Islamic International School System',
   description: 'Fostering excellence in education and character.',
 };
 

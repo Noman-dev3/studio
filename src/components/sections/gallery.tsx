@@ -17,7 +17,7 @@ export function Gallery() {
         <div className="max-w-3xl mx-auto text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-primary tracking-tight">Our Gallery</h2>
           <p className="mt-4 text-lg text-muted-foreground">
-            A glimpse into the vibrant life at Premier International Islamic School.
+            A glimpse into the vibrant life at Pakistan Islamic International School System.
           </p>
         </div>
 
