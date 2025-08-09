@@ -16,10 +16,12 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold text-primary dark:text-primary-foreground mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><Link href="#about" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">About Us</Link></li>
-              <li><Link href="#teachers" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Faculty</Link></li>
-              <li><Link href="#events" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Events</Link></li>
-              <li><Link href="#contact" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Contact</Link></li>
+              <li><Link href="/#about" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">About Us</Link></li>
+              <li><Link href="/admissions" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Admissions</Link></li>
+              <li><Link href="/#teachers" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Faculty</Link></li>
+              <li><Link href="/#events" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Events</Link></li>
+              <li><Link href="/#contact" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Contact</Link></li>
+              <li><Link href="/admin/login" className="hover:text-primary dark:hover:text-primary-foreground transition-colors">Admin Login</Link></li>
             </ul>
           </div>
           <div>

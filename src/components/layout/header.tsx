@@ -10,11 +10,13 @@ import { SmartSearch } from '@/components/smart-search';
 import { cn } from '@/lib/utils';
 
 const navLinks = [
-  { href: '#about', label: 'About' },
-  { href: '#teachers', label: 'Teachers' },
-  { href: '#gallery', label: 'Gallery' },
-  { href: '#events', label: 'Events' },
-  { href: '#contact', label: 'Contact' },
+  { href: '/', label: 'Home' },
+  { href: '/#about', label: 'About' },
+  { href: '/admissions', label: 'Admissions' },
+  { href: '/#teachers', label: 'Teachers' },
+  { href: '/#gallery', label: 'Gallery' },
+  { href: '/#events', label: 'Events' },
+  { href: '/#contact', label: 'Contact' },
 ];
 
 export function Header() {
