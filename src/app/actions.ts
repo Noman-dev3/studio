@@ -70,7 +70,7 @@ export async function submitAdmissionForm(data: unknown) {
   
   const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
   
-  const recipientEmail = 'noman.dev3@gmail.com';
+  const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
   
   // The date is a string here, convert it to a Date object.
   const dateOfBirth = new Date(dob);
