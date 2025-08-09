@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, LogOut, MoreHorizontal, PlusCircle, Settings, Users, FileCheck, DollarSign } from 'lucide-react';
+import { Home, LogOut, MoreHorizontal, Settings, Users, FileCheck, DollarSign, PlusCircle } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -24,17 +24,17 @@ import { Button } from '@/components/ui/button';
 import { PiissLogo } from '@/components/icons/piiss-logo';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
-// Placeholder student data
-const students = [
-  { id: 'S001', name: 'Ahmed Ali', grade: 'Grade 5', status: 'Active', registered: '2023-01-15' },
-  { id: 'S002', name: 'Fatima Khan', grade: 'Grade 3', status: 'Active', registered: '2023-02-20' },
-  { id: 'S003', name: 'Zainab Omar', grade: 'Grade 8', status: 'Inactive', registered: '2022-09-01' },
-  { id: 'S004', name: 'Bilal Yusuf', grade: 'Grade 1', status: 'Active', registered: '2024-03-10' },
-  { id: 'S005', name: 'Aisha Siddiqui', grade: 'Grade 10', status: 'Graduated', registered: '2020-08-25' },
+// Placeholder fee data
+const fees = [
+  { id: 'F001', studentName: 'Ahmed Ali', grade: 'Grade 5', amount: 5000, status: 'Paid', dueDate: '2024-05-10' },
+  { id: 'F002', studentName: 'Fatima Khan', grade: 'Grade 3', amount: 4500, status: 'Pending', dueDate: '2024-06-10' },
+  { id: 'F003', studentName: 'Zainab Omar', grade: 'Grade 8', amount: 6000, status: 'Overdue', dueDate: '2024-04-10' },
+  { id: 'F004', studentName: 'Bilal Yusuf', grade: 'Grade 1', amount: 4000, status: 'Paid', dueDate: '2024-05-10' },
 ];
 
-export default function StudentManagementPage() {
+export default function FeeManagementPage() {
   const router = useRouter();
 
   React.useEffect(() => {
@@ -49,6 +49,19 @@ export default function StudentManagementPage() {
     router.push('/admin/login');
   };
 
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Paid':
+        return 'default';
+      case 'Pending':
+        return 'secondary';
+      case 'Overdue':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -62,14 +75,14 @@ export default function StudentManagementPage() {
             <Button variant="ghost" asChild className="w-full justify-start text-lg">
                 <Link href="/admin/dashboard"><Home className="mr-4" /> Dashboard</Link>
             </Button>
-            <Button variant="secondary" asChild className="w-full justify-start text-lg">
+            <Button variant="ghost" asChild className="w-full justify-start text-lg">
                 <Link href="/admin/dashboard/students"><Users className="mr-4" /> Students</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
             </Button>
-            <Button variant="ghost" asChild className="w-full justify-start text-lg">
-                <Link href="/admin/dashboard/fees"><DollarSign className="mr-4" /> Fees</Link>
+             <Button variant="secondary" asChild className="w-full justify-start text-lg">
+              <Link href="/admin/dashboard/fees"><DollarSign className="mr-4" /> Fees</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>
@@ -88,39 +101,45 @@ export default function StudentManagementPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Students</CardTitle>
-                <CardDescription>Manage student records for the entire school.</CardDescription>
+                <CardTitle>Fees Management</CardTitle>
+                <CardDescription>Track and manage student fee payments.</CardDescription>
               </div>
               <Button size="sm">
                 <PlusCircle className="h-4 w-4 mr-2" />
-                Add Student
+                Generate Fee Slips
               </Button>
+            </div>
+            <div className="mt-4 flex items-center gap-4">
+                <Input placeholder="Search by student name or ID..." className="max-w-sm" />
+                <Button variant="outline">Filter</Button>
             </div>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>Fee ID</TableHead>
+                  <TableHead>Student Name</TableHead>
                   <TableHead>Grade</TableHead>
+                  <TableHead>Amount (PKR)</TableHead>
+                  <TableHead>Due Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Registered On</TableHead>
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.id}</TableCell>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.grade}</TableCell>
+                {fees.map((fee) => (
+                  <TableRow key={fee.id}>
+                    <TableCell className="font-medium">{fee.id}</TableCell>
+                    <TableCell>{fee.studentName}</TableCell>
+                    <TableCell>{fee.grade}</TableCell>
+                    <TableCell>{fee.amount.toLocaleString()}</TableCell>
+                    <TableCell>{fee.dueDate}</TableCell>
                     <TableCell>
-                      <Badge variant={student.status === 'Active' ? 'default' : 'secondary'}>
-                        {student.status}
+                      <Badge variant={getStatusVariant(fee.status) as any}>
+                        {fee.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{student.registered}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -131,9 +150,10 @@ export default function StudentManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
                           <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
+                          <DropdownMenuItem>Send Reminder</DropdownMenuItem>
+                           <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

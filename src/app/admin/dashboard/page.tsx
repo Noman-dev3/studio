@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart, Home, LogOut, Settings, Users, FileCheck } from 'lucide-react';
+import { BarChart, Home, LogOut, Settings, Users, FileCheck, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PiissLogo } from '@/components/icons/piiss-logo';
@@ -49,6 +49,9 @@ export default function AdminDashboardPage() {
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
+            </Button>
+            <Button variant="ghost" asChild className="w-full justify-start text-lg">
+                <Link href="/admin/dashboard/fees"><DollarSign className="mr-4" /> Fees</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>

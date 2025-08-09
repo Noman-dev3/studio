@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, LogOut, MoreHorizontal, Settings, Users, FileCheck } from 'lucide-react';
+import { Home, LogOut, MoreHorizontal, Settings, Users, FileCheck, DollarSign } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -79,6 +79,9 @@ export default function AdmissionManagementPage() {
             </Button>
              <Button variant="secondary" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
+            </Button>
+            <Button variant="ghost" asChild className="w-full justify-start text-lg">
+                <Link href="/admin/dashboard/fees"><DollarSign className="mr-4" /> Fees</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>
