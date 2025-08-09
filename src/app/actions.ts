@@ -70,29 +70,12 @@ export async function submitAdmissionForm(data: unknown) {
   
   const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
   
-  const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
+  const recipientEmail = 'noman.dev3@gmail.com';
   
   // The date is a string here, convert it to a Date object.
   const dateOfBirth = new Date(dob);
 
-  const newAdmission: Admission = {
-    id: `ADM-${Date.now()}`,
-    studentName,
-    dob: dateOfBirth.toISOString(),
-    grade,
-    parentName,
-    parentEmail,
-    parentPhone,
-    previousSchool: previousSchool || '',
-    comments: comments || '',
-    status: 'Pending',
-    applicationDate: new Date().toISOString(),
-  };
-  
   try {
-    // Save the admission application to our "database"
-    await db.saveAdmission(newAdmission);
-
     // Prepare and send the email notification
     const htmlContent = `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
