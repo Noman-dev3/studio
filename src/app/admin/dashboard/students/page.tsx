@@ -37,6 +37,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
+
 
 interface Student {
     id: string;
@@ -90,139 +92,148 @@ export default function StudentManagementPage() {
           description: `${newStudent.name} has been successfully added.`,
       });
       
-      // Reset form and close dialog
       setNewStudentName('');
       setNewStudentGrade('');
       setIsAddStudentDialogOpen(false);
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-secondary text-secondary-foreground p-4 flex-col hidden md:flex">
-        <div className="mb-8">
-            <Link href="/">
-                <PiissLogo className="h-10 w-auto" />
-            </Link>
-        </div>
-        <nav className="flex-1 space-y-2">
-            <Button variant="ghost" asChild className="w-full justify-start text-lg">
-                <Link href="/admin/dashboard"><Home className="mr-4" /> Dashboard</Link>
-            </Button>
-            <Button variant="secondary" asChild className="w-full justify-start text-lg">
-                <Link href="/admin/dashboard/students"><Users className="mr-4" /> Students</Link>
-            </Button>
-             <Button variant="ghost" asChild className="w-full justify-start text-lg">
-              <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
-            </Button>
-            <Button variant="ghost" asChild className="w-full justify-start text-lg">
-                <Link href="/admin/dashboard/fees"><DollarSign className="mr-4" /> Fees</Link>
-            </Button>
-             <Button variant="ghost" asChild className="w-full justify-start text-lg">
-              <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>
-            </Button>
-        </nav>
-        <div className="mt-auto">
-           <Button variant="destructive" className="w-full" onClick={handleLogout}>
-              <LogOut className="mr-2"/> Logout
-            </Button>
-        </div>
-      </aside>
-      
-      {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Students</CardTitle>
-                <CardDescription>Manage student records for the entire school.</CardDescription>
-              </div>
-              <Dialog open={isAddStudentDialogOpen} onOpenChange={setIsAddStudentDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm">
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add Student
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-[425px]">
-                      <DialogHeader>
-                          <DialogTitle>Add New Student</DialogTitle>
-                          <DialogDescription>
-                              Enter the details for the new student. Click save when you're done.
-                          </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid gap-4 py-4">
-                          <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="name" className="text-right">Name</Label>
-                              <Input id="name" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} className="col-span-3" />
-                          </div>
-                          <div className="grid grid-cols-4 items-center gap-4">
-                              <Label htmlFor="grade" className="text-right">Grade</Label>
-                              <Input id="grade" value={newStudentGrade} onChange={(e) => setNewStudentGrade(e.target.value)} className="col-span-3" />
-                          </div>
-                      </div>
-                      <DialogFooter>
-                          <Button onClick={handleAddStudent} variant="destructive">Save Student</Button>
-                      </DialogFooter>
-                  </DialogContent>
-              </Dialog>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+        <Sidebar>
+            <div className="p-4 mb-4">
+                 <Link href="/">
+                    <PiissLogo className="h-10 w-auto" />
+                </Link>
             </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Registered On</TableHead>
-                  <TableHead><span className="sr-only">Actions</span></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.length === 0 ? (
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard"><Home /> Dashboard</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive>
+                <Link href="/admin/dashboard/students"><Users /> Students</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard/admissions"><FileCheck /> Admissions</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard/fees"><DollarSign /> Fees</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard/settings"><Settings /> Settings</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <div className="mt-auto p-4">
+            <Button variant="destructive" className="w-full" onClick={handleLogout}>
+              <LogOut /> Logout
+            </Button>
+          </div>
+        </Sidebar>
+        
+        <main className="flex-1 p-6 md:p-10">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Students</CardTitle>
+                  <CardDescription>Manage student records for the entire school.</CardDescription>
+                </div>
+                <Dialog open={isAddStudentDialogOpen} onOpenChange={setIsAddStudentDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm">
+                          <PlusCircle className="h-4 w-4 mr-2" />
+                          Add Student
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-[425px]">
+                        <DialogHeader>
+                            <DialogTitle>Add New Student</DialogTitle>
+                            <DialogDescription>
+                                Enter the details for the new student. Click save when you're done.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="name" className="text-right">Name</Label>
+                                <Input id="name" value={newStudentName} onChange={(e) => setNewStudentName(e.target.value)} className="col-span-3" />
+                            </div>
+                            <div className="grid grid-cols-4 items-center gap-4">
+                                <Label htmlFor="grade" className="text-right">Grade</Label>
+                                <Input id="grade" value={newStudentGrade} onChange={(e) => setNewStudentGrade(e.target.value)} className="col-span-3" />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={handleAddStudent} variant="destructive">Save Student</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No students found. Add a new student to get started.
-                    </TableCell>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Grade</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Registered On</TableHead>
+                    <TableHead><span className="sr-only">Actions</span></TableHead>
                   </TableRow>
-                ) : (
-                  students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.id}</TableCell>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.grade}</TableCell>
-                    <TableCell>
-                      <Badge variant={student.status === 'Active' ? 'default' : 'secondary'}>
-                        {student.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{student.registered}</TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {students.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No students found. Add a new student to get started.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    students.map((student) => (
+                    <TableRow key={student.id}>
+                      <TableCell className="font-medium">{student.id}</TableCell>
+                      <TableCell>{student.name}</TableCell>
+                      <TableCell>{student.grade}</TableCell>
+                      <TableCell>
+                        <Badge variant={student.status === 'Active' ? 'default' : 'secondary'}>
+                          {student.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{student.registered}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }

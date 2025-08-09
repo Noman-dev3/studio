@@ -25,8 +25,8 @@ import { PiissLogo } from '@/components/icons/piiss-logo';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { SidebarProvider, Sidebar, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 
-// Placeholder fee data has been removed.
 const fees: any[] = [];
 
 export default function FeeManagementPage() {
@@ -58,114 +58,124 @@ export default function FeeManagementPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Sidebar */}
-      <aside className="w-64 bg-secondary text-secondary-foreground p-4 flex-col hidden md:flex">
-        <div className="mb-8">
-            <Link href="/">
-                <PiissLogo className="h-10 w-auto" />
-            </Link>
-        </div>
-        <nav className="flex-1 space-y-2">
-            <Button variant="ghost" asChild className="w-full justify-start text-lg">
-                <Link href="/admin/dashboard"><Home className="mr-4" /> Dashboard</Link>
+    <SidebarProvider>
+      <div className="flex min-h-screen bg-background">
+         <Sidebar>
+            <div className="p-4 mb-4">
+                 <Link href="/">
+                    <PiissLogo className="h-10 w-auto" />
+                </Link>
+            </div>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard"><Home /> Dashboard</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard/students"><Users /> Students</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard/admissions"><FileCheck /> Admissions</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild isActive>
+                <Link href="/admin/dashboard/fees"><DollarSign /> Fees</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/admin/dashboard/settings"><Settings /> Settings</Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+          <div className="mt-auto p-4">
+            <Button variant="destructive" className="w-full" onClick={handleLogout}>
+              <LogOut /> Logout
             </Button>
-            <Button variant="ghost" asChild className="w-full justify-start text-lg">
-                <Link href="/admin/dashboard/students"><Users className="mr-4" /> Students</Link>
-            </Button>
-             <Button variant="ghost" asChild className="w-full justify-start text-lg">
-              <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
-            </Button>
-             <Button variant="secondary" asChild className="w-full justify-start text-lg">
-              <Link href="/admin/dashboard/fees"><DollarSign className="mr-4" /> Fees</Link>
-            </Button>
-             <Button variant="ghost" asChild className="w-full justify-start text-lg">
-              <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>
-            </Button>
-        </nav>
-        <div className="mt-auto">
-           <Button variant="destructive" className="w-full" onClick={handleLogout}>
-              <LogOut className="mr-2"/> Logout
-            </Button>
-        </div>
-      </aside>
-      
-      {/* Main Content */}
-      <main className="flex-1 p-6 md:p-10">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Fees Management</CardTitle>
-                <CardDescription>Track and manage student fee payments.</CardDescription>
+          </div>
+        </Sidebar>
+        
+        <main className="flex-1 p-6 md:p-10">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Fees Management</CardTitle>
+                  <CardDescription>Track and manage student fee payments.</CardDescription>
+                </div>
+                <Button size="sm">
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Generate Fee Slips
+                </Button>
               </div>
-              <Button size="sm">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Generate Fee Slips
-              </Button>
-            </div>
-            <div className="mt-4 flex items-center gap-4">
-                <Input placeholder="Search by student name or ID..." className="max-w-sm" />
-                <Button variant="outline">Filter</Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fee ID</TableHead>
-                  <TableHead>Student Name</TableHead>
-                  <TableHead>Grade</TableHead>
-                  <TableHead>Amount (PKR)</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead><span className="sr-only">Actions</span></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fees.length === 0 ? (
+              <div className="mt-4 flex items-center gap-4">
+                  <Input placeholder="Search by student name or ID..." className="max-w-sm" />
+                  <Button variant="outline">Filter</Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
-                      No fee records found.
-                    </TableCell>
+                    <TableHead>Fee ID</TableHead>
+                    <TableHead>Student Name</TableHead>
+                    <TableHead>Grade</TableHead>
+                    <TableHead>Amount (PKR)</TableHead>
+                    <TableHead>Due Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead><span className="sr-only">Actions</span></TableHead>
                   </TableRow>
-                ) : (
-                  fees.map((fee) => (
-                  <TableRow key={fee.id}>
-                    <TableCell className="font-medium">{fee.id}</TableCell>
-                    <TableCell>{fee.studentName}</TableCell>
-                    <TableCell>{fee.grade}</TableCell>
-                    <TableCell>{fee.amount.toLocaleString()}</TableCell>
-                    <TableCell>{fee.dueDate}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(fee.status) as any}>
-                        {fee.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
-                          <DropdownMenuItem>Send Reminder</DropdownMenuItem>
-                           <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                )))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+                </TableHeader>
+                <TableBody>
+                  {fees.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={7} className="h-24 text-center">
+                        No fee records found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    fees.map((fee) => (
+                    <TableRow key={fee.id}>
+                      <TableCell className="font-medium">{fee.id}</TableCell>
+                      <TableCell>{fee.studentName}</TableCell>
+                      <TableCell>{fee.grade}</TableCell>
+                      <TableCell>{fee.amount.toLocaleString()}</TableCell>
+                      <TableCell>{fee.dueDate}</TableCell>
+                      <TableCell>
+                        <Badge variant={getStatusVariant(fee.status) as any}>
+                          {fee.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <DropdownMenuItem>Mark as Paid</DropdownMenuItem>
+                            <DropdownMenuItem>Send Reminder</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  )))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </main>
+      </div>
+    </SidebarProvider>
   );
 }
