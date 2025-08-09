@@ -136,12 +136,12 @@ export default function AdmissionsPage() {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="playgroup">Playgroup</SelectItem>
-                            <SelectItem value="nursery">Nursery</SelectItem>
-                            <SelectItem value="kg1">KG-1</SelectItem>
-                            <SelectItem value="kg2">KG-2</SelectItem>
+                            <SelectItem value="Playgroup">Playgroup</SelectItem>
+                            <SelectItem value="Nursery">Nursery</SelectItem>
+                            <SelectItem value="KG-1">KG-1</SelectItem>
+                            <SelectItem value="KG-2">KG-2</SelectItem>
                             {[...Array(10)].map((_, i) => (
-                               <SelectItem key={i+1} value={`grade${i+1}`}>Grade {i+1}</SelectItem>
+                               <SelectItem key={i+1} value={`Grade ${i+1}`}>Grade {i+1}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>

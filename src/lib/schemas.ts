@@ -10,6 +10,7 @@ export const contactFormSchema = z.object({
 
 export const admissionFormSchema = z.object({
   studentName: z.string().min(2, "Student's name is required."),
+  // The client-side form uses a Date object.
   dob: z.date({ required_error: 'Date of birth is required.' }),
   grade: z.string({ required_error: 'Please select a grade.' }),
   parentName: z.string().min(2, "Parent's name is required."),

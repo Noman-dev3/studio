@@ -8,6 +8,20 @@ import { format } from 'date-fns';
 import { db, type Admission, Student, Teacher } from '@/lib/db';
 import { contactFormSchema } from '@/lib/schemas';
 
+// Server-side validation schema for admissions.
+// It expects `dob` to be a string, as it's sent from the client.
+const serverAdmissionFormSchema = z.object({
+  studentName: z.string().min(2, "Student's name is required."),
+  dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format." }),
+  grade: z.string({ required_error: 'Please select a grade.' }),
+  parentName: z.string().min(2, "Parent's name is required."),
+  parentEmail: z.string().email('Please enter a valid email.'),
+  parentPhone: z.string().min(10, 'Please enter a valid phone number.'),
+  previousSchool: z.string().optional(),
+  comments: z.string().optional(),
+});
+
+
 export async function submitContactForm(data: unknown) {
   const parsed = contactFormSchema.safeParse(data);
 
@@ -23,7 +37,7 @@ export async function submitContactForm(data: unknown) {
     await sendMail({
       to: recipientEmail,
       subject: `New Contact Form Submission: ${subject}`,
-      text: `Name: ${name}\\nEmail: ${email}\\n\\nMessage:\\n${message}`,
+      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
       html: `
         <div style="font-family: sans-serif; padding: 20px; background-color: #f4f4f4;">
           <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
@@ -45,23 +59,12 @@ export async function submitContactForm(data: unknown) {
   }
 }
 
-// The server receives the date as a string, so we define a schema for the server-side validation.
-const serverAdmissionFormSchema = z.object({
-  studentName: z.string().min(2, "Student's name is required."),
-  dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format." }),
-  grade: z.string({ required_error: 'Please select a grade.' }),
-  parentName: z.string().min(2, "Parent's name is required."),
-  parentEmail: z.string().email('Please enter a valid email.'),
-  parentPhone: z.string().min(10, 'Please enter a valid phone number.'),
-  previousSchool: z.string().optional(),
-  comments: z.string().optional(),
-});
-
 
 export async function submitAdmissionForm(data: unknown) {
   const parsed = serverAdmissionFormSchema.safeParse(data);
 
   if (!parsed.success) {
+    console.error("Server-side validation failed:", parsed.error.flatten().fieldErrors);
     return { success: false, message: 'Invalid form data.', errors: parsed.error.flatten().fieldErrors };
   }
   
@@ -69,6 +72,7 @@ export async function submitAdmissionForm(data: unknown) {
   
   const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
   
+  // The date is a string here, convert it to a Date object.
   const dateOfBirth = new Date(dob);
 
   const newAdmission: Admission = {
