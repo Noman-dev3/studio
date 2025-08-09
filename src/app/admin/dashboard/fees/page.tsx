@@ -66,6 +66,10 @@ export default function FeeManagementPage() {
   
   const form = useForm<FeeFormValues>({
     resolver: zodResolver(feeFormSchema),
+    defaultValues: {
+      studentRollNumber: '',
+      amount: 0,
+    }
   });
 
   const fetchData = React.useCallback(async () => {
