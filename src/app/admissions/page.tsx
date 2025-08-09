@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -17,6 +18,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
+import { submitAdmissionForm } from '@/app/actions';
 
 const admissionFormSchema = z.object({
   studentName: z.string().min(2, "Student's name is required."),
@@ -38,13 +40,20 @@ export default function AdmissionsPage() {
   });
 
   const onSubmit = async (data: AdmissionFormValues) => {
-    console.log('New admission submission:', data);
-    // Here you would typically send the data to your backend
-    toast({
-      title: 'Application Submitted!',
-      description: "We've received your admission application and will review it shortly.",
-    });
-    form.reset();
+    const result = await submitAdmissionForm(data);
+    if (result.success) {
+      toast({
+        title: 'Application Submitted!',
+        description: result.message,
+      });
+      form.reset();
+    } else {
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: result.message || "An unexpected error occurred.",
+        });
+    }
   };
 
   return (
