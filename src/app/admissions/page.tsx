@@ -48,7 +48,14 @@ export default function AdmissionsPage() {
   });
 
   const onSubmit = async (data: AdmissionFormValues) => {
-    const result = await submitAdmissionForm(data);
+    // Convert date to ISO string before sending to the server action
+    const dataWithISOString = {
+      ...data,
+      dob: data.dob.toISOString(),
+    };
+    
+    const result = await submitAdmissionForm(dataWithISOString);
+
     if (result.success) {
       toast({
         title: 'Application Submitted!',
@@ -60,6 +67,7 @@ export default function AdmissionsPage() {
             variant: "destructive",
             title: "Submission Failed",
             description: result.message || "An unexpected error occurred.",
+            errors: result.errors
         });
     }
   };

@@ -54,7 +54,7 @@ export async function submitContactForm(data: unknown) {
 
 const admissionFormSchema = z.object({
   studentName: z.string().min(2, "Student's name is required."),
-  dob: z.date({ required_error: 'Date of birth is required.' }),
+  dob: z.string({ required_error: 'Date of birth is required.' }), // Expect a string
   grade: z.string({ required_error: 'Please select a grade.' }),
   parentName: z.string().min(2, "Parent's name is required."),
   parentEmail: z.string().email('Please enter a valid email.'),
@@ -62,6 +62,7 @@ const admissionFormSchema = z.object({
   previousSchool: z.string().optional(),
   comments: z.string().optional(),
 });
+
 
 export async function submitAdmissionForm(data: unknown) {
   const parsed = admissionFormSchema.safeParse(data);
@@ -74,11 +75,13 @@ export async function submitAdmissionForm(data: unknown) {
   
   // This now works because it reads from server-side environment variables.
   const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
+  
+  const dateOfBirth = new Date(dob);
 
   const newAdmission: Admission = {
     id: `ADM-${Date.now()}`,
     studentName,
-    dob: dob.toISOString(),
+    dob: dateOfBirth.toISOString(),
     grade,
     parentName,
     parentEmail,
@@ -103,7 +106,7 @@ export async function submitAdmissionForm(data: unknown) {
         <div style="padding: 20px;">
           <h2 style="color: #D9534F; border-bottom: 2px solid #D9534F; padding-bottom: 5px;">Student Information</h2>
           <p><strong>Student's Name:</strong> ${studentName}</p>
-          <p><strong>Date of Birth:</strong> ${format(dob, "PPP")}</p>
+          <p><strong>Date of Birth:</strong> ${format(dateOfBirth, "PPP")}</p>
           <p><strong>Applying for Grade:</strong> ${grade}</p>
           <p><strong>Previous School:</strong> ${previousSchool || 'N/A'}</p>
         </div>
@@ -128,7 +131,7 @@ export async function submitAdmissionForm(data: unknown) {
       =================================
       Student Information:
       - Student's Name: ${studentName}
-      - Date of Birth: ${format(dob, "PPP")}
+      - Date of Birth: ${format(dateOfBirth, "PPP")}
       - Applying for Grade: ${grade}
       - Previous School: ${previousSchool || 'N/A'}
 
