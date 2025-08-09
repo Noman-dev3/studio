@@ -35,6 +35,17 @@ export interface Subject {
   marks: number;
 }
 
+export interface Fee {
+  id: string;
+  studentRollNumber: string;
+  studentName: string;
+  grade: string;
+  amount: number;
+  dueDate: string; // ISO String
+  status: 'Paid' | 'Pending' | 'Overdue';
+}
+
+
 export interface StudentResult {
   studentRollNumber: string;
   subjects: Subject[];
@@ -100,6 +111,23 @@ export const db = {
     return Promise.resolve();
   },
 
+  // === Fee Methods ===
+  getFees: async (): Promise<Fee[]> => {
+    return Promise.resolve(getFromLocalStorage<Fee[]>('fees', []));
+  },
+  saveFee: async (fee: Fee): Promise<void> => {
+    const fees = await db.getFees();
+    const existingIndex = fees.findIndex(f => f.id === fee.id);
+    if (existingIndex !== -1) {
+      fees[existingIndex] = fee;
+    } else {
+      fees.push(fee);
+    }
+    saveToLocalStorage('fees', fees);
+    return Promise.resolve();
+  },
+
+
   // === Result Methods ===
   getResults: async (): Promise<StudentResult[]> => {
     return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
@@ -153,10 +181,10 @@ export const db = {
 
   // === General Settings ===
   getSetting: async (key: string): Promise<string | null> => {
-    return Promise.resolve(getFromLocalStorage<string | null>(key, null));
+    return Promise.resolve(getFromLocalStorage<string | null>(`setting_${key}`, null));
   },
   saveSetting: async (key: string, value: string): Promise<void> => {
-    saveToLocalStorage(key, value);
+    saveToLocalStorage(`setting_${key}`, value);
     return Promise.resolve();
   }
 };
