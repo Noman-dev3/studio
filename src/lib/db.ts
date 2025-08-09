@@ -18,7 +18,7 @@ export interface Teacher {
   Teacher_ID: string;
   Contact: string;
   Salary: string;
-  Photo_Path: string;
+  Photo_Path: string; // Stored as ISO string
   Date_Joined: string; // Stored as ISO string
 }
 
@@ -28,6 +28,22 @@ export interface Topper {
     grade: string;
     marks: string;
 }
+
+export interface Subject {
+  id: string;
+  name: string;
+  marks: number;
+}
+
+export interface StudentResult {
+  studentRollNumber: string;
+  subjects: Subject[];
+  totalMarks: number;
+  percentage: number;
+  grade: string;
+  position?: '1st' | '2nd' | '3rd' | 'No Position';
+}
+
 
 // Helper function to safely access local storage
 const getFromLocalStorage = <T>(key: string, defaultValue: T): T => {
@@ -81,6 +97,56 @@ export const db = {
   },
   saveToppers: async (toppers: Topper[]): Promise<void> => {
     saveToLocalStorage('toppers', toppers);
+    return Promise.resolve();
+  },
+
+  // === Result Methods ===
+  getResults: async (): Promise<StudentResult[]> => {
+    return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
+  },
+
+  getResultsForClass: async(className: string): Promise<StudentResult[]> => {
+    const allResults = await db.getResults();
+    const allStudents = await db.getStudents();
+    const studentIdsInClass = allStudents
+        .filter(s => s.Class === className)
+        .map(s => s.Roll_Number);
+    
+    return allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber));
+  },
+
+  saveResult: async (result: StudentResult): Promise<void> => {
+    let results = await db.getResults();
+    const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
+    if (existingIndex !== -1) {
+        results[existingIndex] = result;
+    } else {
+        results.push(result);
+    }
+
+    // After saving, recalculate positions for the entire class
+    const student = (await db.getStudents()).find(s => s.Roll_Number === result.studentRollNumber);
+    if (student) {
+        const classResults = await db.getResultsForClass(student.Class);
+        // Sort by percentage descending
+        classResults.sort((a, b) => b.percentage - a.percentage);
+        
+        const positionMap: { [key: string]: '1st' | '2nd' | '3rd' | 'No Position' } = {};
+        
+        if(classResults.length > 0) positionMap[classResults[0].studentRollNumber] = '1st';
+        if(classResults.length > 1) positionMap[classResults[1].studentRollNumber] = '2nd';
+        if(classResults.length > 2) positionMap[classResults[2].studentRollNumber] = '3rd';
+
+        results = results.map(r => {
+            const studentForPos = allStudents.find(s => s.Roll_Number === r.studentRollNumber);
+            if (studentForPos?.Class === student.Class) {
+                return { ...r, position: positionMap[r.studentRollNumber] || 'No Position' };
+            }
+            return r;
+        });
+    }
+    
+    saveToLocalStorage('results', results);
     return Promise.resolve();
   },
 
