@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { BarChart, Home, Users, FileCheck, DollarSign } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, Student, Admission, Fee } from '@/lib/db';
 import { Bar, BarChart as RechartsBarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
@@ -53,7 +53,7 @@ export default function AdminDashboardPage() {
     const newApplications = admissions.filter(a => a.status === 'Pending').length;
     
     const monthlyRevenue = fees
-        .filter(f => f.status === 'Paid' && new Date(f.paymentDate!).getMonth() === currentMonth && new Date(f.paymentDate!).getFullYear() === currentYear)
+        .filter(f => f.status === 'Paid' && f.paymentDate && new Date(f.paymentDate).getMonth() === currentMonth && new Date(f.paymentDate).getFullYear() === currentYear)
         .reduce((acc, f) => acc + f.amount, 0);
 
     const feesOverdue = fees.filter(f => f.status === 'Overdue' || (f.status === 'Pending' && new Date(f.dueDate) < now)).length;
@@ -70,7 +70,7 @@ export default function AdminDashboardPage() {
     const data: { name: string, total: number }[] = [];
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
-    fees.filter(f => f.status === 'Paid').forEach(fee => {
+    fees.filter(f => f.status === 'Paid' && f.paymentDate).forEach(fee => {
       const date = new Date(fee.paymentDate!);
       const month = date.getMonth();
       const monthName = months[month];
