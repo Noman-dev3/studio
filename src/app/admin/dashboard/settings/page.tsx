@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Save } from 'lucide-react';
+import { Save, Upload } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,7 +24,6 @@ export default function SettingsPage() {
   }, [router]);
 
   const handleSaveChanges = () => {
-    // In a real application, you would save these settings to a database.
     toast({
         title: "Settings Saved",
         description: "Your changes have been successfully saved.",
@@ -38,30 +37,38 @@ export default function SettingsPage() {
                 <h1 className="text-3xl font-bold text-primary">Site Settings</h1>
                 <p className="text-muted-foreground">Manage website content and configurations.</p>
             </div>
-            <Button onClick={handleSaveChanges}>
-                <Save className="mr-2 h-4 w-4" /> Save Changes
-            </Button>
         </div>
         
         <div className="grid gap-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Hero Section</CardTitle>
-                    <CardDescription>Update the main text and image on the homepage.</CardDescription>
+                    <CardTitle>Data Management</CardTitle>
+                    <CardDescription>Upload CSV files to populate student and teacher data. This will overwrite any existing data.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label htmlFor="hero-title">Headline</Label>
-                        <Input id="hero-title" placeholder="Excellence in Education, Rooted in Faith" />
+                        <Label htmlFor="students-csv">Students Data</Label>
+                        <div className="flex items-center gap-2">
+                            <Input id="students-csv" type="file" accept=".csv" />
+                            <Button>
+                                <Upload className="mr-2 h-4 w-4" /> Upload
+                            </Button>
+                        </div>
+                         <p className="text-sm text-muted-foreground">
+                            Required columns: Name, Roll_Number, Class, Gender, Contact, Address
+                        </p>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="hero-subtitle">Sub-headline</Label>
-                        <Textarea id="hero-subtitle" placeholder="Nurturing young minds to become future leaders..." />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="hero-image">Hero Background Image</Label>
-                        <Input id="hero-image" type="file" />
-                        <p className="text-sm text-muted-foreground">Upload a new background image. Recommended size: 1920x1080px.</p>
+                        <Label htmlFor="teachers-csv">Teachers Data</Label>
+                         <div className="flex items-center gap-2">
+                            <Input id="teachers-csv" type="file" accept=".csv" />
+                             <Button>
+                                <Upload className="mr-2 h-4 w-4" /> Upload
+                            </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                           Required columns: Name, Teacher_ID, Contact, Salary, Photo_Path, Date_Joined
+                        </p>
                     </div>
                 </CardContent>
             </Card>
@@ -88,6 +95,12 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
+
+             <div className="flex justify-end">
+                <Button onClick={handleSaveChanges}>
+                    <Save className="mr-2 h-4 w-4" /> Save All Changes
+                </Button>
+            </div>
         </div>
     </AdminLayout>
   );

@@ -4,10 +4,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { MoreHorizontal, PlusCircle, Calendar as CalendarIcon, Loader2, UserSquare } from 'lucide-react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { MoreHorizontal } from 'lucide-react';
+
 import {
   Table,
   TableBody,
@@ -23,53 +21,19 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, type Teacher } from '@/lib/db';
-import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { cn } from '@/lib/utils';
-
-const teacherFormSchema = z.object({
-  name: z.string().min(2, "Teacher's name is required."),
-  subject: z.string().min(2, "Subject is required."),
-  email: z.string().email('Please enter a valid email.'),
-  phone: z.string().min(10, 'Please enter a valid phone number.'),
-  joiningDate: z.date({ required_error: 'Joining date is required.' }),
-});
-
-type TeacherFormValues = z.infer<typeof teacherFormSchema>;
+import Image from 'next/image';
 
 export default function TeacherManagementPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [teachers, setTeachers] = React.useState<Teacher[]>([]);
-  const [isAddTeacherDialogOpen, setIsAddTeacherDialogOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(true);
-
-  const form = useForm<TeacherFormValues>({
-    resolver: zodResolver(teacherFormSchema),
-    defaultValues: {
-      name: '',
-      subject: '',
-      email: '',
-      phone: '',
-    },
-  });
 
   const fetchTeachers = React.useCallback(async () => {
     setIsLoading(true);
@@ -92,25 +56,6 @@ export default function TeacherManagementPage() {
     fetchTeachers();
   }, [router, fetchTeachers]);
 
-  const handleAddTeacher = async (data: TeacherFormValues) => {
-    try {
-      await db.addTeacher(data);
-      toast({
-        title: 'Teacher Added',
-        description: `${data.name} has been successfully added.`,
-      });
-      fetchTeachers(); // Re-fetch to update the list
-      setIsAddTeacherDialogOpen(false);
-      form.reset();
-    } catch (error) {
-       toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Failed to add teacher.',
-      });
-    }
-  }
-
   return (
     <AdminLayout activePage="teachers">
         <Card>
@@ -120,96 +65,51 @@ export default function TeacherManagementPage() {
                 <CardTitle>Teachers</CardTitle>
                 <CardDescription>Manage teacher records for the school.</CardDescription>
             </div>
-            <Dialog open={isAddTeacherDialogOpen} onOpenChange={setIsAddTeacherDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button size="sm">
-                        <PlusCircle className="h-4 w-4 mr-2" />
-                        Add Teacher
-                    </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[525px]">
-                    <DialogHeader>
-                        <DialogTitle>Add New Teacher</DialogTitle>
-                        <DialogDescription>
-                            Enter the details for the new teacher.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleAddTeacher)} className="space-y-4 py-4">
-                            <FormField control={form.control} name="name" render={({ field }) => (
-                                <FormItem><FormLabel>Teacher's Full Name</FormLabel><FormControl><Input placeholder="e.g., Ahmed Hassan" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                             <FormField control={form.control} name="subject" render={({ field }) => (
-                                <FormItem><FormLabel>Subject</FormLabel><FormControl><Input placeholder="e.g., Mathematics" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                             <FormField control={form.control} name="email" render={({ field }) => (
-                                <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="e.g., teacher@example.com" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                             <FormField control={form.control} name="phone" render={({ field }) => (
-                                <FormItem><FormLabel>Phone</FormLabel><FormControl><Input placeholder="e.g., +1234567890" {...field} /></FormControl><FormMessage /></FormItem>
-                            )}/>
-                            <FormField control={form.control} name="joiningDate" render={({ field }) => (
-                                <FormItem className="flex flex-col"><FormLabel>Joining Date</FormLabel>
-                                    <Popover><PopoverTrigger asChild><FormControl>
-                                        <Button variant={"outline"} className={cn("pl-3 text-left font-normal",!field.value && "text-muted-foreground")}>
-                                            {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                        </Button>
-                                    </FormControl></PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus/>
-                                    </PopoverContent></Popover><FormMessage />
-                                </FormItem>
-                            )}/>
-                            <DialogFooter>
-                                <Button type="submit" variant="destructive" disabled={form.formState.isSubmitting}>
-                                  {form.formState.isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                  Save Teacher
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    </Form>
-                </DialogContent>
-            </Dialog>
             </div>
         </CardHeader>
         <CardContent>
             <Table>
             <TableHeader>
                 <TableRow>
+                <TableHead>Photo</TableHead>
                 <TableHead>Teacher ID</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Subject</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joining Date</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Salary</TableHead>
+                <TableHead>Date Joined</TableHead>
                 <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {isLoading ? (
                     <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                             Loading teachers...
                         </TableCell>
                     </TableRow>
                 ) : teachers.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                    No teachers found. Add a new teacher to get started.
+                    <TableCell colSpan={7} className="h-24 text-center">
+                    No teachers found. Upload the teachers CSV file in settings.
                     </TableCell>
                 </TableRow>
                 ) : (
                 teachers.map((teacher, index) => (
-                <TableRow key={`${teacher.id}-${index}`}>
-                    <TableCell className="font-medium">{teacher.id}</TableCell>
-                    <TableCell>{teacher.name}</TableCell>
-                    <TableCell>{teacher.subject}</TableCell>
+                <TableRow key={`${teacher.Teacher_ID}-${index}`}>
                     <TableCell>
-                    <Badge variant={teacher.status === 'Active' ? 'default' : 'secondary'}>
-                        {teacher.status}
-                    </Badge>
+                      <Image 
+                        src={teacher.Photo_Path || `https://placehold.co/40x40.png?text=${teacher.Name.charAt(0)}`} 
+                        alt={teacher.Name}
+                        width={40}
+                        height={40}
+                        className="rounded-full"
+                      />
                     </TableCell>
-                    <TableCell>{format(teacher.joiningDate, "PPP")}</TableCell>
+                    <TableCell className="font-medium">{teacher.Teacher_ID}</TableCell>
+                    <TableCell>{teacher.Name}</TableCell>
+                    <TableCell>{teacher.Contact}</TableCell>
+                    <TableCell>{teacher.Salary}</TableCell>
+                    <TableCell>{format(new Date(teacher.Date_Joined), "PPP")}</TableCell>
                     <TableCell>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -220,7 +120,7 @@ export default function TeacherManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem>Edit</DropdownMenuItem>
+                        <DropdownMenuItem>Edit Name</DropdownMenuItem>
                         <DropdownMenuItem>View Details</DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                         </DropdownMenuContent>

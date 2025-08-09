@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -59,14 +60,6 @@ export default function FeeManagementPage() {
                 <CardTitle>Fees Management</CardTitle>
                 <CardDescription>Track and manage student fee payments.</CardDescription>
             </div>
-            <Button size="sm">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Generate Fee Slips
-            </Button>
-            </div>
-            <div className="mt-4 flex items-center gap-4">
-                <Input placeholder="Search by student name or ID..." className="max-w-sm" />
-                <Button variant="outline">Filter</Button>
             </div>
         </CardHeader>
         <CardContent>
