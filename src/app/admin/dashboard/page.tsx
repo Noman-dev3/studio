@@ -24,7 +24,6 @@ export default function AdminDashboardPage() {
     router.push('/admin/login');
   };
 
-  // Placeholder data removed. In a real app, you would fetch this from a database.
   const dashboardItems = [
     { title: 'Total Students', value: '0', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
     { title: 'New Applications', value: '0', icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },

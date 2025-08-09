@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, LogOut, MoreHorizontal, PlusCircle, Settings, Users, FileCheck, DollarSign, Loader2 } from 'lucide-react';
+import { Home, LogOut, MoreHorizontal, PlusCircle, Settings, Users, FileCheck, DollarSign } from 'lucide-react';
 import {
   Table,
   TableBody,
