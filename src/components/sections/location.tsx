@@ -1,12 +1,31 @@
+
 'use client';
 
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Phone, Mail } from 'lucide-react';
+import * as React from 'react';
+import { db } from '@/lib/db';
 
 export function Location() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const position = { lat: 3.1390, lng: 101.6869 }; // Placeholder: Kuala Lumpur
+
+  const [contactInfo, setContactInfo] = React.useState({ email: '', phone: '', address: '' });
+
+  React.useEffect(() => {
+    async function fetchContactInfo() {
+      const email = await db.getSetting('contactEmail');
+      const phone = await db.getSetting('contactPhone');
+      const address = await db.getSetting('contactAddress');
+      setContactInfo({
+        email: email || 'contact@piiss.edu',
+        phone: phone || '+1 (234) 567-890',
+        address: address || '123 Education Lane, Knowledge City, 12345',
+      });
+    }
+    fetchContactInfo();
+  }, []);
 
   return (
     <section id="location" className="py-16 md:py-24 bg-secondary">
@@ -40,21 +59,21 @@ export function Location() {
                   <MapPin className="w-6 h-6 mr-4 mt-1 text-destructive shrink-0" />
                   <div>
                     <h4 className="font-semibold">Address</h4>
-                    <p>123 Education Lane, Knowledge City, 12345</p>
+                    <p>{contactInfo.address}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Phone className="w-6 h-6 mr-4 mt-1 text-destructive shrink-0" />
                   <div>
                     <h4 className="font-semibold">Phone</h4>
-                    <p>+1 (234) 567-890</p>
+                    <p>{contactInfo.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <Mail className="w-6 h-6 mr-4 mt-1 text-destructive shrink-0" />
                   <div>
                     <h4 className="font-semibold">Email</h4>
-                    <p>contact@piiss.edu</p>
+                    <p>{contactInfo.email}</p>
                   </div>
                 </div>
               </div>

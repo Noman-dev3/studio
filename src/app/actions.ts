@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { smartSearch, type SmartSearchInput } from '@/ai/flows/smart-search';
 import { sendMail } from '@/lib/mail';
 import { format } from 'date-fns';
+import { db } from '@/lib/db';
 
 const contactFormSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
@@ -21,11 +22,11 @@ export async function submitContactForm(data: unknown) {
   }
 
   const { name, email, subject, message } = parsed.data;
-  const to = process.env.CONTACT_EMAIL_TO;
+  const to = await db.getSetting('contactEmail');
 
   if (!to) {
-    console.error('CONTACT_EMAIL_TO environment variable is not set.');
-    return { success: false, message: 'Server is not configured to receive contact emails.' };
+    console.error('Contact email is not set in admin settings.');
+    return { success: false, message: 'Server is not configured to receive contact emails. Please contact an administrator.' };
   }
 
   try {
@@ -73,11 +74,11 @@ export async function submitAdmissionForm(data: unknown) {
   }
   
   const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
-  const to = process.env.CONTACT_EMAIL_TO;
+  const to = await db.getSetting('contactEmail');
   
   if (!to) {
-    console.error('CONTACT_EMAIL_TO environment variable is not set for admissions.');
-    return { success: false, message: 'Server is not configured to receive admission emails.' };
+    console.error('Contact email is not set in admin settings for admissions.');
+    return { success: false, message: 'Server is not configured to receive admission emails. Please contact an administrator.' };
   }
 
   const htmlContent = `
