@@ -5,24 +5,14 @@ import { PiissLogo } from "@/components/icons/piiss-logo";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
 import * as React from 'react';
-import { db } from '@/lib/db';
 
 export function Footer() {
-  const [contactInfo, setContactInfo] = React.useState({ email: '', phone: '', address: '' });
-
-  React.useEffect(() => {
-    async function fetchContactInfo() {
-      const email = await db.getSetting('contactEmail');
-      const phone = await db.getSetting('contactPhone');
-      const address = await db.getSetting('contactAddress');
-      setContactInfo({
-        email: email || 'contact@piiss.edu',
-        phone: phone || '+1 (234) 567-890',
-        address: address || '123 Education Lane, Knowledge City, 12345',
-      });
-    }
-    fetchContactInfo();
-  }, []);
+  // Contact info is now read from environment variables, which are available client-side
+  const contactInfo = {
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@piiss.edu',
+    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+1 (234) 567-890',
+    address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Lane, Knowledge City, 12345',
+  };
 
   return (
     <footer className="bg-secondary text-secondary-foreground">

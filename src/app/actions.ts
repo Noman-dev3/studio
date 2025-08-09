@@ -23,8 +23,8 @@ export async function submitContactForm(data: unknown) {
 
   const { name, email, subject, message } = parsed.data;
 
-  // This now works because db.getSetting is correctly exposed.
-  const recipientEmail = await db.getSetting('contactEmail') || 'noman.dev3@gmail.com';
+  // This now works because it reads from server-side environment variables.
+  const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
 
   try {
     await sendMail({
@@ -72,8 +72,8 @@ export async function submitAdmissionForm(data: unknown) {
   
   const { studentName, dob, grade, parentName, parentEmail, parentPhone, previousSchool, comments } = parsed.data;
   
-  // This now works because db.getSetting is correctly exposed.
-  const recipientEmail = await db.getSetting('contactEmail') || 'noman.dev3@gmail.com';
+  // This now works because it reads from server-side environment variables.
+  const recipientEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'noman.dev3@gmail.com';
 
   const newAdmission: Admission = {
     id: `ADM-${Date.now()}`,

@@ -5,33 +5,25 @@ import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 import { Card, CardContent } from '@/components/ui/card';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import * as React from 'react';
-import { db } from '@/lib/db';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export function Location() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const position = { lat: 24.8607, lng: 67.0011 }; // Placeholder: Karachi
-
-  const [contactInfo, setContactInfo] = React.useState({ email: '', phone: '', address: '' });
-  const [isApiKeyMissing, setIsApiKeyMissing] = React.useState(false);
+  
+  const [isClient, setIsClient] = React.useState(false);
 
   React.useEffect(() => {
-    if (!apiKey || apiKey === "YOUR_API_KEY_HERE") {
-        setIsApiKeyMissing(true);
-    }
+    setIsClient(true);
+  }, []);
 
-    async function fetchContactInfo() {
-      const email = await db.getSetting('contactEmail');
-      const phone = await db.getSetting('contactPhone');
-      const address = await db.getSetting('contactAddress');
-      setContactInfo({
-        email: email || 'contact@piiss.edu',
-        phone: phone || '+92 123 4567890',
-        address: address || '123 Education Road, Karachi, Pakistan',
-      });
-    }
-    fetchContactInfo();
-  }, [apiKey]);
+  const contactInfo = {
+    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@piiss.edu',
+    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+92 123 4567890',
+    address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Road, Karachi, Pakistan',
+  };
+
+  const isApiKeyMissing = !apiKey || apiKey === "YOUR_API_KEY_HERE";
 
   return (
     <section id="location" className="py-16 md:py-24 bg-secondary">
@@ -46,7 +38,7 @@ export function Location() {
         <Card className="overflow-hidden shadow-xl">
           <div className="grid md:grid-cols-3">
             <div className="md:col-span-2 h-96 md:h-full w-full">
-              {isApiKeyMissing ? (
+              {isClient && (isApiKeyMissing ? (
                 <div className="w-full h-full bg-muted flex items-center justify-center p-4">
                   <Alert variant="destructive" className="max-w-sm">
                     <MapPin className="h-4 w-4"/>
@@ -62,7 +54,7 @@ export function Location() {
                     <Marker position={position} />
                   </Map>
                 </APIProvider>
-              )}
+              ))}
             </div>
             <div className="p-8 bg-card flex flex-col justify-center">
               <h3 className="text-2xl font-bold text-primary mb-6">Find Us Here</h3>

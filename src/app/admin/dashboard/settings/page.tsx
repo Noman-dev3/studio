@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, Upload, PlusCircle, XCircle } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,16 +12,13 @@ import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, Topper } from '@/lib/db';
 import Papa from 'papaparse';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
   const studentsFileRef = React.useRef<HTMLInputElement>(null);
   const teachersFileRef = React.useRef<HTMLInputElement>(null);
-
-  const [contactEmail, setContactEmail] = React.useState('');
-  const [contactPhone, setContactPhone] = React.useState('');
-  const [contactAddress, setContactAddress] = React.useState('');
   
   const [toppers, setToppers] = React.useState<Topper[]>([]);
   const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
@@ -34,13 +31,7 @@ export default function SettingsPage() {
     }
 
     const fetchSettings = async () => {
-        const email = await db.getSetting('contactEmail');
-        const phone = await db.getSetting('contactPhone');
-        const address = await db.getSetting('contactAddress');
         const savedToppers = await db.getToppers();
-        setContactEmail(email || '');
-        setContactPhone(phone || '');
-        setContactAddress(address || '');
         setToppers(savedToppers);
     }
     fetchSettings();
@@ -49,9 +40,6 @@ export default function SettingsPage() {
 
   const handleSaveChanges = async () => {
     try {
-        await db.saveSetting('contactEmail', contactEmail);
-        await db.saveSetting('contactPhone', contactPhone);
-        await db.saveSetting('contactAddress', contactAddress);
         await db.saveToppers(toppers);
         toast({
             title: "Settings Saved",
@@ -115,6 +103,13 @@ export default function SettingsPage() {
         </div>
         
         <div className="grid gap-8">
+            <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Configuration Change</AlertTitle>
+                <AlertDescription>
+                    Contact information (email, phone, address) and Google Maps API key are now managed in the <code>.env</code> file for better security and server-side access.
+                </AlertDescription>
+            </Alert>
             <Card>
                 <CardHeader>
                     <CardTitle>Data Management</CardTitle>
@@ -204,29 +199,6 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardHeader>
-                    <CardTitle>Contact Information</CardTitle>
-                    <CardDescription>Update the contact details displayed on the website.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="contact-email">Email</Label>
-                            <Input id="contact-email" type="email" placeholder="contact@piiss.edu" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="contact-phone">Phone Number</Label>
-                            <Input id="contact-phone" placeholder="+1 (234) 567-890" value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} />
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="contact-address">Address</Label>
-                        <Input id="contact-address" placeholder="123 Education Lane, Knowledge City, 12345" value={contactAddress} onChange={(e) => setContactAddress(e.target.value)}/>
-                    </div>
-                </CardContent>
-            </Card>
-
              <div className="flex justify-end">
                 <Button onClick={handleSaveChanges}>
                     <Save className="mr-2 h-4 w-4" /> Save All Changes
@@ -236,4 +208,3 @@ export default function SettingsPage() {
     </AdminLayout>
   );
 }
-

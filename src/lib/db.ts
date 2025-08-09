@@ -99,47 +99,53 @@ const saveToLocalStorage = <T>(key: string, value: T) => {
 }
 
 // --- Data Access Functions ---
-const fns = {
+// All these functions are async to simulate real database calls
+export const db = {
   // === Student Methods ===
   getStudents: async (): Promise<Student[]> => {
-    return getFromLocalStorage<Student[]>('students', []);
+    return Promise.resolve(getFromLocalStorage<Student[]>('students', []));
   },
   saveStudents: async (students: Student[]): Promise<void> => {
     saveToLocalStorage('students', students);
+    return Promise.resolve();
   },
   deleteStudent: async (rollNumber: string): Promise<void> => {
-    let students = await fns.getStudents();
+    let students = await db.getStudents();
     students = students.filter(s => s.Roll_Number !== rollNumber);
     saveToLocalStorage('students', students);
+    return Promise.resolve();
   },
 
   // === Teacher Methods ===
   getTeachers: async (): Promise<Teacher[]> => {
-    return getFromLocalStorage<Teacher[]>('teachers', []);
+    return Promise.resolve(getFromLocalStorage<Teacher[]>('teachers', []));
   },
   saveTeachers: async (teachers: Teacher[]): Promise<void> => {
     saveToLocalStorage('teachers', teachers);
+    return Promise.resolve();
   },
   deleteTeacher: async (teacherId: string): Promise<void> => {
-    let teachers = await fns.getTeachers();
+    let teachers = await db.getTeachers();
     teachers = teachers.filter(t => t.Teacher_ID !== teacherId);
     saveToLocalStorage('teachers', teachers);
+    return Promise.resolve();
   },
 
   // === Topper Methods ===
   getToppers: async (): Promise<Topper[]> => {
-    return getFromLocalStorage<Topper[]>('toppers', []);
+    return Promise.resolve(getFromLocalStorage<Topper[]>('toppers', []));
   },
   saveToppers: async (toppers: Topper[]): Promise<void> => {
     saveToLocalStorage('toppers', toppers);
+    return Promise.resolve();
   },
 
   // === Fee Methods ===
   getFees: async (): Promise<Fee[]> => {
-    return getFromLocalStorage<Fee[]>('fees', []);
+    return Promise.resolve(getFromLocalStorage<Fee[]>('fees', []));
   },
   saveFee: async (fee: Fee): Promise<void> => {
-    const fees = await fns.getFees();
+    const fees = await db.getFees();
     const existingIndex = fees.findIndex(f => f.id === fee.id);
     if (existingIndex !== -1) {
       fees[existingIndex] = fee;
@@ -147,33 +153,35 @@ const fns = {
       fees.push(fee);
     }
     saveToLocalStorage('fees', fees);
+    return Promise.resolve();
   },
   saveFees: async (fees: Fee[]): Promise<void> => {
     saveToLocalStorage('fees', fees);
+    return Promise.resolve();
   },
   deleteFee: async (feeId: string): Promise<void> => {
-    let fees = await fns.getFees();
+    let fees = await db.getFees();
     fees = fees.filter(f => f.id !== feeId);
     saveToLocalStorage('fees', fees);
+    return Promise.resolve();
   },
-
 
   // === Result Methods ===
   getResults: async (): Promise<StudentResult[]> => {
-      return getFromLocalStorage<StudentResult[]>('results', []);
+      return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
   },
   getResultsForClass: async (className: string): Promise<StudentResult[]> => {
-    const allResults = await fns.getResults();
-    const allStudents = await fns.getStudents();
+    const allResults = await db.getResults();
+    const allStudents = await db.getStudents();
     const studentIdsInClass = allStudents
         .filter(s => s.Class === className)
         .map(s => s.Roll_Number);
     
-    return allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber));
+    return Promise.resolve(allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber)));
   },
   saveResult: async (result: StudentResult): Promise<void> => {
-    let results = await fns.getResults();
-    const allStudents = await fns.getStudents();
+    let results = await db.getResults();
+    const allStudents = await db.getStudents();
     const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
     if (existingIndex !== -1) {
         results[existingIndex] = result;
@@ -183,7 +191,15 @@ const fns = {
 
     const student = allStudents.find(s => s.Roll_Number === result.studentRollNumber);
     if (student) {
-        const classResults = await fns.getResultsForClass(student.Class);
+        const classResults = await db.getResultsForClass(student.Class);
+        // Ensure the current result is included for calculation if it's new
+        const currentResultIndex = classResults.findIndex(r => r.studentRollNumber === result.studentRollNumber);
+        if (currentResultIndex === -1) {
+            classResults.push(result);
+        } else {
+            classResults[currentResultIndex] = result;
+        }
+
         classResults.sort((a, b) => b.percentage - a.percentage);
         
         const positionMap: { [key: string]: '1st' | '2nd' | '3rd' | 'No Position' } = {};
@@ -202,29 +218,21 @@ const fns = {
     }
     
     saveToLocalStorage('results', results);
+    return Promise.resolve();
   },
 
   // === Admission Methods ===
   getAdmissions: async (): Promise<Admission[]> => {
-    return getFromLocalStorage<Admission[]>('admissions', []);
+    return Promise.resolve(getFromLocalStorage<Admission[]>('admissions', []));
   },
   saveAdmission: async (admission: Admission): Promise<void> => {
-    const admissions = await fns.getAdmissions();
+    const admissions = await db.getAdmissions();
     admissions.push(admission);
     saveToLocalStorage('admissions', admissions);
+    return Promise.resolve();
   },
   saveAdmissions: async (admissions: Admission[]): Promise<void> => {
       saveToLocalStorage('admissions', admissions);
-  },
-
-
-  // === General Settings ===
-  getSetting: async (key: string): Promise<string | null> => {
-      return getFromLocalStorage<string | null>(`setting_${key}`, null);
-  },
-  saveSetting: async (key: string, value: string): Promise<void> => {
-      saveToLocalStorage(`setting_${key}`, value);
+      return Promise.resolve();
   },
 };
-
-export const db = fns;
