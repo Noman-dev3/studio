@@ -51,7 +51,7 @@ export async function sendMail({ to, subject, text, html }: MailOptions) {
 
   try {
     const info = await transporter.sendMail({
-      from: EMAIL_FROM,
+      from: EMAIL_FROM, // Mailgun requires the 'from' address to match the sending user.
       to: to,
       subject,
       text,
