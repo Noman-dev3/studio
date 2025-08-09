@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Home, LogOut, MoreHorizontal, PlusCircle, Settings, Users, FileCheck } from 'lucide-react';
+import { Home, LogOut, MoreHorizontal, Settings, Users, FileCheck } from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -25,16 +25,15 @@ import { PiissLogo } from '@/components/icons/piiss-logo';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 
-// Placeholder student data
-const students = [
-  { id: 'S001', name: 'Ahmed Ali', grade: 'Grade 5', status: 'Active', registered: '2023-01-15' },
-  { id: 'S002', name: 'Fatima Khan', grade: 'Grade 3', status: 'Active', registered: '2023-02-20' },
-  { id: 'S003', name: 'Zainab Omar', grade: 'Grade 8', status: 'Inactive', registered: '2022-09-01' },
-  { id: 'S004', name: 'Bilal Yusuf', grade: 'Grade 1', status: 'Active', registered: '2024-03-10' },
-  { id: 'S005', name: 'Aisha Siddiqui', grade: 'Grade 10', status: 'Graduated', registered: '2020-08-25' },
+// Placeholder admission data
+const admissions = [
+  { id: 'A001', studentName: 'Hassan Iqbal', grade: 'Grade 1', parentName: 'Iqbal Ahmed', status: 'Pending', submitted: '2024-05-20' },
+  { id: 'A002', studentName: 'Ayesha Jamil', grade: 'Grade 5', parentName: 'Jamil Khan', status: 'Approved', submitted: '2024-05-18' },
+  { id: 'A003', studentName: 'Saad Farooq', grade: 'Nursery', parentName: 'Farooq Ali', status: 'Pending', submitted: '2024-05-22' },
+  { id: 'A004', studentName: 'Mariam Baig', grade: 'Grade 8', parentName: 'Mirza Baig', status: 'Rejected', submitted: '2024-05-15' },
 ];
 
-export default function StudentManagementPage() {
+export default function AdmissionManagementPage() {
   const router = useRouter();
 
   React.useEffect(() => {
@@ -49,6 +48,19 @@ export default function StudentManagementPage() {
     router.push('/admin/login');
   };
 
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'Approved':
+        return 'default';
+      case 'Pending':
+        return 'secondary';
+      case 'Rejected':
+        return 'destructive';
+      default:
+        return 'outline';
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
@@ -62,10 +74,10 @@ export default function StudentManagementPage() {
             <Button variant="ghost" asChild className="w-full justify-start text-lg">
                 <Link href="/admin/dashboard"><Home className="mr-4" /> Dashboard</Link>
             </Button>
-            <Button variant="secondary" asChild className="w-full justify-start text-lg">
+            <Button variant="ghost" asChild className="w-full justify-start text-lg">
                 <Link href="/admin/dashboard/students"><Users className="mr-4" /> Students</Link>
             </Button>
-             <Button variant="ghost" asChild className="w-full justify-start text-lg">
+             <Button variant="secondary" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
@@ -85,39 +97,37 @@ export default function StudentManagementPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Students</CardTitle>
-                <CardDescription>Manage student records for the entire school.</CardDescription>
+                <CardTitle>Admissions</CardTitle>
+                <CardDescription>Manage and review new student applications.</CardDescription>
               </div>
-              <Button size="sm">
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Add Student
-              </Button>
             </div>
           </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student ID</TableHead>
-                  <TableHead>Name</TableHead>
+                  <TableHead>App. ID</TableHead>
+                  <TableHead>Student Name</TableHead>
                   <TableHead>Grade</TableHead>
+                  <TableHead>Parent Name</TableHead>
+                  <TableHead>Submitted On</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Registered On</TableHead>
                   <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.map((student) => (
-                  <TableRow key={student.id}>
-                    <TableCell className="font-medium">{student.id}</TableCell>
-                    <TableCell>{student.name}</TableCell>
-                    <TableCell>{student.grade}</TableCell>
+                {admissions.map((admission) => (
+                  <TableRow key={admission.id}>
+                    <TableCell className="font-medium">{admission.id}</TableCell>
+                    <TableCell>{admission.studentName}</TableCell>
+                    <TableCell>{admission.grade}</TableCell>
+                    <TableCell>{admission.parentName}</TableCell>
+                    <TableCell>{admission.submitted}</TableCell>
                     <TableCell>
-                      <Badge variant={student.status === 'Active' ? 'default' : 'secondary'}>
-                        {student.status}
+                      <Badge variant={getStatusVariant(admission.status) as any}>
+                        {admission.status}
                       </Badge>
                     </TableCell>
-                    <TableCell>{student.registered}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -128,9 +138,9 @@ export default function StudentManagementPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
+                          <DropdownMenuItem>View Application</DropdownMenuItem>
+                          <DropdownMenuItem>Approve</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">Reject</DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

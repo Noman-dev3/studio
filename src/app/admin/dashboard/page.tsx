@@ -1,8 +1,9 @@
+
 'use client';
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { BarChart, Home, LogOut, Settings, Users } from 'lucide-react';
+import { BarChart, Home, LogOut, Settings, Users, FileCheck } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { PiissLogo } from '@/components/icons/piiss-logo';
@@ -25,7 +26,7 @@ export default function AdminDashboardPage() {
 
   const dashboardItems = [
     { title: 'Total Students', value: '1,200', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
-    { title: 'New Applications', value: '52', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
+    { title: 'New Applications', value: '52', icon: <FileCheck className="h-6 w-6 text-muted-foreground" /> },
     { title: 'Revenue (Monthly)', value: '$50,000', icon: <BarChart className="h-6 w-6 text-muted-foreground" /> },
     { title: 'Site Visitors', value: '12,345', icon: <Users className="h-6 w-6 text-muted-foreground" /> },
   ];
@@ -40,14 +41,14 @@ export default function AdminDashboardPage() {
             </Link>
         </div>
         <nav className="flex-1 space-y-2">
-            <Button variant="ghost" asChild className="w-full justify-start text-lg">
+            <Button variant="secondary" asChild className="w-full justify-start text-lg">
                 <Link href="/admin/dashboard"><Home className="mr-4" /> Dashboard</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
                 <Link href="/admin/dashboard/students"><Users className="mr-4" /> Students</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
-              <Link href="/admin/dashboard/admissions"><Users className="mr-4" /> Admissions</Link>
+              <Link href="/admin/dashboard/admissions"><FileCheck className="mr-4" /> Admissions</Link>
             </Button>
              <Button variant="ghost" asChild className="w-full justify-start text-lg">
               <Link href="/admin/dashboard/settings"><Settings className="mr-4" /> Settings</Link>
