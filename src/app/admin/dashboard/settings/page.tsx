@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon, Check } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,12 +15,6 @@ import { db, Topper, StudentResult, SiteSettings, Feature, Announcement, Event, 
 import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
-
-type ImageUrlState = {
-    hero: string;
-    about: string;
-    location: string;
-};
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -34,14 +28,6 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
-
-  // State to hold the temporary URL inputs
-  const [imageUrls, setImageUrls] = React.useState<ImageUrlState>({
-      hero: '',
-      about: '',
-      location: ''
-  });
-
 
   React.useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
@@ -59,13 +45,6 @@ export default function SettingsPage() {
             ]);
             setToppers(savedToppers);
             setSettings(savedSettings);
-             if (savedSettings?.images) {
-                setImageUrls({
-                    hero: savedSettings.images.hero || '',
-                    about: savedSettings.images.about || '',
-                    location: savedSettings.images.location || '',
-                });
-            }
         } catch (error) {
             console.error("Failed to fetch settings:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
@@ -95,19 +74,11 @@ export default function SettingsPage() {
     }
   }
 
-  // This function now just updates the main settings object.
   const handleImageChange = (field: keyof SiteSettings['images'], value: string) => {
     if (settings) {
       setSettings({ ...settings, images: { ...settings.images, [field]: value } });
     }
   };
-  
-  // This function is triggered by the "Update" button for URLs
-  const handleImageUrlUpdate = (field: keyof ImageUrlState) => {
-      handleImageChange(field, imageUrls[field]);
-      toast({ title: 'Image URL Updated', description: `The ${field} image URL has been staged. Click "Save All Changes" to apply.` });
-  };
-
 
   const handleImageUpload = (file: File, field: keyof SiteSettings['images']) => {
     if (!file) return;
@@ -115,7 +86,7 @@ export default function SettingsPage() {
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
         handleImageChange(field, e.target.result);
-        toast({ title: 'Image Uploaded', description: 'Click "Save All Changes" to apply.' });
+        toast({ title: 'Image Staged', description: 'Click "Save All Changes" to make the change permanent.' });
       }
     };
     reader.readAsDataURL(file);
@@ -126,9 +97,25 @@ export default function SettingsPage() {
       const updatedGallery = settings.images.gallery.map(img => 
         img.id === id ? { ...img, [field]: value } : img
       );
-      handleImageChange('gallery', updatedGallery as any);
+      handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
     }
   };
+  
+  const handleGalleryImageUpload = (file: File, id: string) => {
+    if (!file || !settings) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (typeof e.target?.result === 'string') {
+         const updatedGallery = settings.images.gallery.map(img => 
+            img.id === id ? { ...img, src: e.target?.result as string } : img
+         );
+         handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
+         toast({ title: 'Image Staged', description: 'Click "Save All Changes" to apply.' });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
 
   const addGalleryImage = () => {
     if(settings) {
@@ -138,14 +125,14 @@ export default function SettingsPage() {
         alt: 'New Gallery Image',
         hint: ''
       };
-      handleImageChange('gallery', [...settings.images.gallery, newImage] as any);
+       handleSettingsChange('images', {...settings.images, gallery: [...settings.images.gallery, newImage]});
     }
   };
 
   const removeGalleryImage = (id: string) => {
     if(settings) {
       const updatedGallery = settings.images.gallery.filter(img => img.id !== id);
-      handleImageChange('gallery', updatedGallery as any);
+      handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
     }
   };
 
@@ -339,7 +326,7 @@ export default function SettingsPage() {
              <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><ImageIcon/>Image Management</CardTitle>
-                    <CardDescription>Update main images on the website by providing a URL or uploading a file.</CardDescription>
+                    <CardDescription>Update main images on the website by uploading a file.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-3 gap-6">
                     {(['hero', 'about', 'location'] as const).map(field => (
@@ -351,15 +338,6 @@ export default function SettingsPage() {
                                 width={300} height={200} 
                                 className="rounded-md border aspect-video object-cover"
                             />
-                            <div className="flex gap-2">
-                                <Input 
-                                    id={`${field}-image-url`}
-                                    placeholder="Enter image URL"
-                                    value={imageUrls[field]}
-                                    onChange={e => setImageUrls(prev => ({...prev, [field]: e.target.value}))}
-                                />
-                                <Button onClick={() => handleImageUrlUpdate(field)} size="icon"><Check/></Button>
-                            </div>
                             <Input 
                                 id={`${field}-image-upload`}
                                 type="file"
@@ -413,7 +391,16 @@ export default function SettingsPage() {
                         <Image src={image.src || "https://placehold.co/200x150.png"} alt={image.alt} width={200} height={150} className="w-full object-cover aspect-video rounded-md" />
                         <div className="space-y-1">
                           <Label htmlFor={`gallery-src-${image.id}`} className="text-xs">Image URL or Data URL</Label>
-                          <Input id={`gallery-src-${image.id}`} value={image.src} onChange={e => handleGalleryImageChange(image.id, 'src', e.target.value)} />
+                           <Input 
+                                id={`gallery-upload-${image.id}`}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => e.target.files && handleGalleryImageUpload(e.target.files[0], image.id)}
+                            />
+                             <Button onClick={() => document.getElementById(`gallery-upload-${image.id}`)?.click()} variant="outline" className="w-full">
+                                <Upload className="mr-2 h-4 w-4"/> Upload File
+                            </Button>
                         </div>
                         <div className="space-y-1">
                           <Label htmlFor={`gallery-alt-${image.id}`} className="text-xs">Alt Text</Label>
