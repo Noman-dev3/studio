@@ -88,31 +88,4 @@ export async function updateStudent(data: Student) {
     }
 }
 
-const checkResultSchema = z.object({
-    rollNumber: z.string().optional(),
-    name: z.string().optional(),
-    className: z.string().optional(),
-}).refine(data => !!data.rollNumber?.trim() || (!!data.name?.trim() && !!data.className?.trim()), {
-    message: "Either Roll Number or both Name and Class are required.",
-    path: ["rollNumber"],
-});
-
-export async function checkResult(data: { rollNumber?: string; name?: string; className?: string }) {
-    const parsed = checkResultSchema.safeParse(data);
-    if (!parsed.success) {
-        const firstError = parsed.error.errors[0];
-        return { success: false, message: firstError?.message || 'Invalid input.' };
-    }
-
-    try {
-        const result = await db.getResult(data);
-        if (result) {
-            return { success: true, data: result };
-        } else {
-            return { success: false, message: "No result found for the provided details. Please check the information and try again." };
-        }
-    } catch (error) {
-        console.error("Result check failed:", error);
-        return { success: false, message: "An error occurred while checking the result." };
-    }
-}
+    
