@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   }
 
   const mailOptions = {
-    from: `"${settings.schoolName}" <${process.env.EMAIL_FROM || 'no-reply@yourdomain.com'}>`,
+    from: `"${settings.schoolName}" <${process.env.EMAIL_FROM}>`,
     to: recipientEmail,
     replyTo: type === 'contact' ? data.email : data.parentEmail,
     subject: subject,
@@ -68,16 +68,36 @@ export async function POST(req: Request) {
   };
 
   try {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error('Brevo email environment variables (EMAIL_USER, EMAIL_PASS) are not set.');
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS || !process.env.EMAIL_FROM) {
+      console.error('Brevo email environment variables (EMAIL_USER, EMAIL_PASS, EMAIL_FROM) are not set.');
       console.log("Form submission received but email not sent due to missing config:", data);
+      
+      // Still save admission to DB even if email fails
+      if (type === 'admission') {
+         await db.saveAdmission({
+          ...data,
+          dob: new Date(data.dob).toISOString(),
+          status: 'Pending',
+          applicationDate: new Date().toISOString()
+        });
+      }
+
       return NextResponse.json({ message: 'Your message has been received. The site administrator will be notified.' }, { status: 200 });
     }
+
     await transporter.sendMail(mailOptions);
     return NextResponse.json({ message: 'Email sent successfully!' }, { status: 200 });
   } catch (error) {
     console.error('Failed to send email via Brevo:', error);
+     // Still save admission to DB even if email fails
+      if (type === 'admission') {
+         await db.saveAdmission({
+          ...data,
+          dob: new Date(data.dob).toISOString(),
+          status: 'Pending',
+          applicationDate: new Date().toISOString()
+        });
+      }
     return NextResponse.json({ message: 'Failed to send email.' }, { status: 500 });
   }
 }
-
