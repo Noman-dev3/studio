@@ -35,15 +35,15 @@ export async function POST(req: Request) {
 
   const settings = await db.getSettings();
   
-  // Hardcoded recipient email as requested
   const recipientEmail = "noman.dev3@gmail.com";
 
-  // Using environment variables for transporter as a fallback
   const transporter = nodemailer.createTransport({
-    service: 'gmail', // Using a common service, can be changed
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false, // true for 465, false for other ports
     auth: {
-      user: process.env.EMAIL_USER, // These need to be set in your deployment environment
-      pass: process.env.EMAIL_PASS,
+      user: process.env.EMAIL_USER, // Your Brevo login email
+      pass: process.env.EMAIL_PASS, // Your Brevo SMTP API Key
     },
   });
 
@@ -68,17 +68,15 @@ export async function POST(req: Request) {
   };
 
   try {
-    // Check for required env vars
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error('Email environment variables (EMAIL_USER, EMAIL_PASS) are not set.');
-      // Log submission and return success to user, as email cannot be sent.
+      console.error('Brevo email environment variables (EMAIL_USER, EMAIL_PASS) are not set.');
       console.log("Form submission received but email not sent due to missing config:", data);
       return NextResponse.json({ message: 'Your message has been received. The site administrator will be notified.' }, { status: 200 });
     }
     await transporter.sendMail(mailOptions);
     return NextResponse.json({ message: 'Email sent successfully!' }, { status: 200 });
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('Failed to send email via Brevo:', error);
     return NextResponse.json({ message: 'Failed to send email.' }, { status: 500 });
   }
 }
