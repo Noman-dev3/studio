@@ -160,8 +160,8 @@ export default function ResultsPage() {
                   <Table>
                     <TableHeader><TableRow><TableHead>Roll Number</TableHead><TableHead>Student Name</TableHead><TableHead>Class</TableHead><TableHead>Grade</TableHead><TableHead className="text-right">Action</TableHead></TableRow></TableHeader>
                     <TableBody>
-                      {filteredResults.map((result) => (
-                        <TableRow key={result.roll_number}>
+                      {filteredResults.map((result, index) => (
+                        <TableRow key={`${result.roll_number}-${result.student_name}-${index}`}>
                           <TableCell className="font-medium">{result.roll_number}</TableCell>
                           <TableCell>{result.student_name}</TableCell>
                           <TableCell>{result.class}</TableCell>
