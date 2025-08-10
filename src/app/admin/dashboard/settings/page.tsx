@@ -341,7 +341,7 @@ export default function SettingsPage() {
                             <Input 
                                 id={`${field}-image-upload`}
                                 type="file"
-                                accept="image/*"
+                                accept="image/png, image/jpeg, image/gif, image/webp"
                                 className="hidden"
                                 onChange={e => e.target.files && handleImageUpload(e.target.files[0], field as keyof SiteSettings['images'])}
                             />
@@ -394,7 +394,7 @@ export default function SettingsPage() {
                            <Input 
                                 id={`gallery-upload-${image.id}`}
                                 type="file"
-                                accept="image/*"
+                                accept="image/png, image/jpeg, image/gif, image/webp"
                                 className="hidden"
                                 onChange={(e) => e.target.files && handleGalleryImageUpload(e.target.files[0], image.id)}
                             />
