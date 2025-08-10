@@ -33,11 +33,13 @@ export function Hero() {
       {isLoading ? 
         <Skeleton className="absolute inset-0" />
       :
-        <div 
-          className="absolute inset-0 bg-cover bg-center" 
-          style={{ backgroundImage: `url('${heroImage}')` }}
-          data-ai-hint="school building students"
-        ></div>
+        heroImage && (
+            <div 
+              className="absolute inset-0 bg-cover bg-center" 
+              style={{ backgroundImage: `url('${heroImage}')` }}
+              data-ai-hint="school building students"
+            ></div>
+        )
       }
 
 
