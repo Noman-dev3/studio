@@ -1,29 +1,17 @@
 
 'use client';
 
-import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import * as React from 'react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Image from 'next/image';
 
 export function Location() {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-  const position = { lat: 24.8607, lng: 67.0011 }; // Placeholder: Karachi
-  
-  const [isClient, setIsClient] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   const contactInfo = {
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@piiss.edu',
     phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+92 123 4567890',
     address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Road, Karachi, Pakistan',
   };
-
-  const isApiKeyMissing = !apiKey || apiKey === "YOUR_API_KEY_HERE";
 
   return (
     <section id="location" className="py-16 md:py-24 bg-secondary">
@@ -36,25 +24,16 @@ export function Location() {
         </div>
         
         <Card className="overflow-hidden shadow-xl">
-          <div className="grid md:grid-cols-3">
-            <div className="md:col-span-2 h-96 md:h-full w-full">
-              {isClient && (isApiKeyMissing ? (
-                <div className="w-full h-full bg-muted flex items-center justify-center p-4">
-                  <Alert variant="destructive" className="max-w-sm">
-                    <MapPin className="h-4 w-4"/>
-                    <AlertTitle>Google Maps API Key is Missing</AlertTitle>
-                    <AlertDescription>
-                        Please add your Google Maps API key to the .env file to enable the map view.
-                    </AlertDescription>
-                  </Alert>
-                </div>
-              ) : (
-                <APIProvider apiKey={apiKey!}>
-                  <Map defaultCenter={position} defaultZoom={14} mapId="piiss-school-map" className="w-full h-full">
-                    <Marker position={position} />
-                  </Map>
-                </APIProvider>
-              ))}
+          <div className="grid md:grid-cols-2">
+            <div className="md:col-span-1 h-96 md:h-full w-full bg-muted flex items-center justify-center">
+                 <Image
+                  src="https://placehold.co/600x500.png"
+                  alt="School location placeholder"
+                  width={600}
+                  height={500}
+                  className="object-cover w-full h-full"
+                  data-ai-hint="map location"
+                />
             </div>
             <div className="p-8 bg-card flex flex-col justify-center">
               <h3 className="text-2xl font-bold text-primary mb-6">Find Us Here</h3>
