@@ -1,0 +1,33 @@
+
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Allow public read access for all collections needed by the website
+    match /settings/{document=**} {
+      allow read: if true;
+      allow write: if false; // Writes should be handled by an admin SDK or secure backend
+    }
+
+    match /students/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /teachers/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /results/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /admissions/{document=**} {
+        allow read: if false; // Should not be public
+        allow write: if false;
+    }
+  }
+}
