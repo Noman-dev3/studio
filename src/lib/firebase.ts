@@ -1,6 +1,7 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, enableMultiTabIndexedDbPersistence } from 'firebase/firestore';
+import { getFirestore, enableMultiTabIndexedDbPersistence, initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "piiss-bfh06",
@@ -14,9 +15,12 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const db = getFirestore(app);
 
-// Enable offline persistence
+// Initialize Firestore with persistence
+const db = initializeFirestore(app, {
+  cacheSizeBytes: CACHE_SIZE_UNLIMITED,
+});
+
 enableMultiTabIndexedDbPersistence(db).catch((err) => {
   if (err.code == 'failed-precondition') {
     // Multiple tabs open, persistence can only be enabled in one tab at a a time.
