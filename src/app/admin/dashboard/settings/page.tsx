@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon, Contact } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon, Contact, Mail } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -41,13 +41,7 @@ export default function SettingsPage() {
       setIsLoading(true);
       try {
           const savedSettings = await db.getSettings();
-          // Deep merge to ensure all nested objects have default values
-          setSettings(prev => ({
-              ...prev,
-              ...savedSettings,
-              socials: { ...prev.socials, ...savedSettings.socials },
-              images: { ...prev.images, ...savedSettings.images }
-          }));
+          setSettings(savedSettings);
       } catch (error) {
           console.error("Failed to fetch settings:", error);
           toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
@@ -294,6 +288,35 @@ export default function SettingsPage() {
                     <div className="space-y-2 md:col-span-2">
                         <Label htmlFor="contactAddress">Contact Address</Label>
                         <Textarea id="contactAddress" value={settings.contactAddress} onChange={e => handleSettingsChange('contactAddress', e.target.value)} />
+                    </div>
+                </CardContent>
+            </Card>
+            
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Mail/>Email Sender Configuration</CardTitle>
+                    <CardDescription>Configure the SMTP settings for sending emails (e.g., from Brevo, SendGrid, etc.).</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="emailHost">SMTP Host</Label>
+                        <Input id="emailHost" placeholder="e.g., smtp.sendinblue.com" value={settings.emailSettings?.host || ''} onChange={e => handleNestedChange('emailSettings', 'host', e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="emailPort">SMTP Port</Label>
+                        <Input id="emailPort" type="number" placeholder="e.g., 587" value={settings.emailSettings?.port || ''} onChange={e => handleNestedChange('emailSettings', 'port', Number(e.target.value))} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="emailUser">SMTP Username / Email</Label>
+                        <Input id="emailUser" placeholder="your-login@email.com" value={settings.emailSettings?.user || ''} onChange={e => handleNestedChange('emailSettings', 'user', e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="emailPass">SMTP Password / API Key</Label>
+                        <Input id="emailPass" type="password" placeholder="••••••••••••••••" value={settings.emailSettings?.pass || ''} onChange={e => handleNestedChange('emailSettings', 'pass', e.target.value)} />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="emailFrom">"From" Email Address</Label>
+                        <Input id="emailFrom" placeholder="e.g., no-reply@yourschool.com" value={settings.emailSettings?.from || ''} onChange={e => handleNestedChange('emailSettings', 'from', e.target.value)} />
                     </div>
                 </CardContent>
             </Card>

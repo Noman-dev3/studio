@@ -33,29 +33,22 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { type, ...data } = body;
 
-  const {
-    EMAIL_SERVER_HOST,
-    EMAIL_SERVER_PORT,
-    EMAIL_SERVER_USER,
-    EMAIL_SERVER_PASSWORD,
-    EMAIL_FROM,
-  } = process.env;
-
   const settings = await db.getSettings();
   const adminEmail = settings.contactEmail;
+  const emailConfig = settings.emailSettings;
 
-  if (!EMAIL_SERVER_HOST || !EMAIL_SERVER_PORT || !EMAIL_SERVER_USER || !EMAIL_SERVER_PASSWORD || !EMAIL_FROM || !adminEmail) {
-    console.error('Missing required environment variables or admin email for email configuration.');
-    return NextResponse.json({ message: 'Server is not configured to send emails.' }, { status: 500 });
+  if (!emailConfig || !emailConfig.host || !emailConfig.port || !emailConfig.user || !emailConfig.pass || !emailConfig.from || !adminEmail) {
+    console.error('Missing required email configuration in the admin settings.');
+    return NextResponse.json({ message: 'Server is not configured to send emails. Please configure email settings in the admin dashboard.' }, { status: 500 });
   }
 
   const transporter = nodemailer.createTransport({
-    host: EMAIL_SERVER_HOST,
-    port: Number(EMAIL_SERVER_PORT),
-    secure: Number(EMAIL_SERVER_PORT) === 465,
+    host: emailConfig.host,
+    port: emailConfig.port,
+    secure: emailConfig.port === 465, // Use true for port 465, false for all other ports
     auth: {
-      user: EMAIL_SERVER_USER,
-      pass: EMAIL_SERVER_PASSWORD,
+      user: emailConfig.user,
+      pass: emailConfig.pass,
     },
   });
 
@@ -72,7 +65,7 @@ export async function POST(req: Request) {
   }
 
   const mailOptions = {
-    from: `"${settings.schoolName}" <${EMAIL_FROM}>`,
+    from: `"${settings.schoolName}" <${emailConfig.from}>`,
     to: adminEmail,
     replyTo: type === 'contact' ? data.email : data.parentEmail,
     subject: subject,
