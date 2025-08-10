@@ -1,8 +1,19 @@
 
 'use client';
+import { db } from './firebase';
+import {
+  collection,
+  doc,
+  getDoc,
+  setDoc,
+  getDocs,
+  writeBatch,
+  deleteDoc,
+  query,
+  where,
+  limit,
+} from 'firebase/firestore';
 
-// This file simulates a database using local storage.
-// In a real-world application, you would replace this with a connection to a real database.
 
 export interface Student {
   Name: string;
@@ -30,7 +41,6 @@ export interface Topper {
     marks: string;
 }
 
-// Kept for manual result creation form.
 export interface Subject {
   id: string;
   name: string;
@@ -107,6 +117,9 @@ export interface SiteSettings {
   testimonials: Testimonial[];
   adminUsername: string;
   adminPassword: string;
+  contactEmail: string;
+  contactPhone: string;
+  contactAddress: string;
   socials: {
     facebook: string;
     twitter: string;
@@ -119,33 +132,6 @@ export interface SiteSettings {
     location: string;
     gallery: GalleryImage[];
   }
-}
-
-
-// Helper function to safely access local storage
-const getFromLocalStorage = <T>(key: string, defaultValue: T): T => {
-  if (typeof window === 'undefined') {
-    return defaultValue;
-  }
-  try {
-    const item = window.localStorage.getItem(key);
-    return item ? JSON.parse(item) : defaultValue;
-  } catch (error) {
-    console.warn(`Error reading localStorage key "${key}":`, error);
-    return defaultValue;
-  }
-};
-
-const saveToLocalStorage = <T>(key: string, value: T) => {
-    if (typeof window === 'undefined') {
-        console.warn(`Tried to save to localStorage ("${key}") on the server.`);
-        return;
-    }
-    try {
-        window.localStorage.setItem(key, JSON.stringify(value));
-    } catch (error) {
-        console.warn(`Error writing to localStorage key "${key}":`, error);
-    }
 }
 
 export const defaultSettings: SiteSettings = {
@@ -176,6 +162,9 @@ export const defaultSettings: SiteSettings = {
     ],
     adminUsername: 'admin',
     adminPassword: 'password',
+    contactEmail: 'contact@piiss.edu',
+    contactPhone: '+1 234 567 890',
+    contactAddress: '123 Education Lane, Knowledge City',
     socials: {
         facebook: '#',
         twitter: '#',
@@ -197,118 +186,140 @@ export const defaultSettings: SiteSettings = {
     }
 };
 
+const collections = {
+  settings: 'settings',
+  students: 'students',
+  teachers: 'teachers',
+  toppers: 'toppers',
+  results: 'results',
+  admissions: 'admissions',
+};
 
-// --- Data Access Functions ---
-// All these functions are async to simulate real database calls
-export const db = {
-  // === Settings Methods ===
+const dbService = {
   getSettings: async (): Promise<SiteSettings> => {
-    return Promise.resolve(getFromLocalStorage<SiteSettings>('site_settings', defaultSettings));
+    const docRef = doc(db, collections.settings, 'global');
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return { ...defaultSettings, ...docSnap.data() } as SiteSettings;
+    } else {
+      await setDoc(docRef, defaultSettings);
+      return defaultSettings;
+    }
   },
   saveSettings: async (settings: SiteSettings): Promise<void> => {
-    saveToLocalStorage('site_settings', settings);
-    return Promise.resolve();
+    const docRef = doc(db, collections.settings, 'global');
+    await setDoc(docRef, settings, { merge: true });
   },
 
-  // === Student Methods ===
   getStudents: async (): Promise<Student[]> => {
-    return Promise.resolve(getFromLocalStorage<Student[]>('students', []));
+    const querySnapshot = await getDocs(collection(db, collections.students));
+    return querySnapshot.docs.map(doc => doc.data() as Student);
   },
   saveStudents: async (students: Student[]): Promise<void> => {
-    saveToLocalStorage('students', students);
-    return Promise.resolve();
+    const batch = writeBatch(db);
+    students.forEach(student => {
+      const docRef = doc(db, collections.students, student.Roll_Number);
+      batch.set(docRef, student);
+    });
+    await batch.commit();
   },
   deleteStudent: async (rollNumber: string): Promise<void> => {
-    let students = await db.getStudents();
-    students = students.filter(s => s.Roll_Number !== rollNumber);
-    saveToLocalStorage('students', students);
-    return Promise.resolve();
+    await deleteDoc(doc(db, collections.students, rollNumber));
   },
 
-  // === Teacher Methods ===
   getTeachers: async (): Promise<Teacher[]> => {
-    return Promise.resolve(getFromLocalStorage<Teacher[]>('teachers', []));
+    const querySnapshot = await getDocs(collection(db, collections.teachers));
+    return querySnapshot.docs.map(doc => doc.data() as Teacher);
   },
   saveTeachers: async (teachers: Teacher[]): Promise<void> => {
-    saveToLocalStorage('teachers', teachers);
-    return Promise.resolve();
+    const batch = writeBatch(db);
+    teachers.forEach(teacher => {
+      const docRef = doc(db, collections.teachers, teacher.Teacher_ID);
+      batch.set(docRef, teacher);
+    });
+    await batch.commit();
   },
   deleteTeacher: async (teacherId: string): Promise<void> => {
-    let teachers = await db.getTeachers();
-    teachers = teachers.filter(t => t.Teacher_ID !== teacherId);
-    saveToLocalStorage('teachers', teachers);
-    return Promise.resolve();
+     await deleteDoc(doc(db, collections.teachers, teacherId));
   },
 
-  // === Topper Methods ===
   getToppers: async (): Promise<Topper[]> => {
-    return Promise.resolve(getFromLocalStorage<Topper[]>('toppers', []));
+    // Toppers are stored within the settings document.
+    const settings = await dbService.getSettings();
+    return settings.toppers || [];
   },
   saveToppers: async (toppers: Topper[]): Promise<void> => {
-    saveToLocalStorage('toppers', toppers);
-    return Promise.resolve();
+    // Toppers are stored within the settings document.
+    const settings = await dbService.getSettings();
+    settings.toppers = toppers;
+    await dbService.saveSettings(settings);
   },
 
-  // === Result Methods ===
   getResults: async (): Promise<StudentResult[]> => {
-      return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
+    const querySnapshot = await getDocs(collection(db, collections.results));
+    return querySnapshot.docs.map(doc => doc.data() as StudentResult);
   },
-  getResult: async (query: { rollNumber?: string; name?: string; className?: string }): Promise<StudentResult | null> => {
-      const results = await db.getResults();
-      let foundResult: StudentResult | undefined;
-      
-      const cleanRollNumber = query.rollNumber?.trim().toLowerCase();
-      const cleanName = query.name?.trim().toLowerCase();
-      const cleanClassName = query.className?.trim().toLowerCase();
-
-      // First, prioritize search by roll number if provided
-      if (cleanRollNumber) {
-          foundResult = results.find(r => r.roll_number.trim().toLowerCase() === cleanRollNumber);
-      }
-      
-      // If not found by roll number (or if roll number wasn't provided), search by name and class
-      if (!foundResult && cleanName && cleanClassName) {
-          foundResult = results.find(r => 
-              r.student_name.trim().toLowerCase() === cleanName &&
-              r.class.trim().toLowerCase() === cleanClassName
-          );
-      }
-      
-      return Promise.resolve(foundResult || null);
-  },
-  saveResult: async (result: StudentResult): Promise<void> => {
-    let results = await db.getResults();
-    const existingIndex = results.findIndex(r => r.roll_number.trim().toLowerCase() === result.roll_number.trim().toLowerCase());
+  getResult: async (queryData: { rollNumber?: string; name?: string; className?: string }): Promise<StudentResult | null> => {
+    const resultsCol = collection(db, collections.results);
+    const cleanRollNumber = queryData.rollNumber?.trim().toLowerCase();
+    const cleanName = queryData.name?.trim().toLowerCase();
+    const cleanClassName = queryData.className?.trim().toLowerCase();
     
-    if (existingIndex !== -1) {
-        // Update existing result
-        results[existingIndex] = result;
-    } else {
-        // Add new result
-        results.push(result);
+    if (cleanRollNumber) {
+      const docRef = doc(db, collections.results, cleanRollNumber);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) return docSnap.data() as StudentResult;
     }
     
-    saveToLocalStorage('results', results);
-    return Promise.resolve();
+    if (cleanName && cleanClassName) {
+      const q = query(
+        resultsCol, 
+        where("student_name_lowercase", "==", cleanName), 
+        where("class_lowercase", "==", cleanClassName),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].data() as StudentResult;
+      }
+    }
+    
+    return null;
   },
-   saveResults: async (resultsToSave: StudentResult[]): Promise<void> => {
-    // This function can be used for bulk uploads in the future, overwriting all results.
-    saveToLocalStorage('results', resultsToSave);
-    return Promise.resolve();
+  saveResult: async (result: StudentResult): Promise<void> => {
+    const docRef = doc(db, collections.results, result.roll_number.trim().toLowerCase());
+    const resultWithLowercase = {
+      ...result,
+      student_name_lowercase: result.student_name.toLowerCase(),
+      class_lowercase: result.class.toLowerCase()
+    }
+    await setDoc(docRef, resultWithLowercase);
+  },
+  saveResults: async (resultsToSave: StudentResult[]): Promise<void> => {
+    const batch = writeBatch(db);
+    resultsToSave.forEach(result => {
+        const docRef = doc(db, collections.results, result.roll_number.trim().toLowerCase());
+        batch.set(docRef, result);
+    });
+    await batch.commit();
   },
 
-  // === Admission Methods ===
   getAdmissions: async (): Promise<Admission[]> => {
-    return Promise.resolve(getFromLocalStorage<Admission[]>('admissions', []));
+    const querySnapshot = await getDocs(collection(db, collections.admissions));
+    return querySnapshot.docs.map(doc => doc.data() as Admission);
   },
   saveAdmission: async (admission: Admission): Promise<void> => {
-    const admissions = await db.getAdmissions();
-    admissions.push(admission);
-    saveToLocalStorage('admissions', admissions);
-    return Promise.resolve();
+    const docRef = doc(db, collections.admissions, admission.id);
+    await setDoc(docRef, admission);
   },
   saveAdmissions: async (admissions: Admission[]): Promise<void> => {
-      saveToLocalStorage('admissions', admissions);
-      return Promise.resolve();
+    const batch = writeBatch(db);
+    admissions.forEach(adm => {
+        const docRef = doc(db, collections.admissions, adm.id);
+        batch.set(docRef, adm);
+    });
+    await batch.commit();
   },
 };
+
+export { dbService as db };

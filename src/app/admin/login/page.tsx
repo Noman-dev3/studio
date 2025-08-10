@@ -31,7 +31,11 @@ export default function AdminLoginPage() {
 
   React.useEffect(() => {
     setIsClient(true);
-  }, []);
+    // Pre-check if already logged in
+    if (localStorage.getItem('isAdminAuthenticated') === 'true') {
+        router.replace('/admin/dashboard');
+    }
+  }, [router]);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -40,28 +44,41 @@ export default function AdminLoginPage() {
 
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
+    try {
+        const settings = await db.getSettings();
 
-    const settings = await db.getSettings();
-
-    if (data.username === settings.adminUsername && data.password === settings.adminPassword) {
-      localStorage.setItem('isAdminAuthenticated', 'true');
-      toast({
-        title: 'Login Successful',
-        description: 'Redirecting to the admin dashboard...',
-      });
-      router.push('/admin/dashboard');
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Invalid username or password.',
-      });
-      setIsLoading(false);
+        if (data.username === settings.adminUsername && data.password === settings.adminPassword) {
+          localStorage.setItem('isAdminAuthenticated', 'true');
+          toast({
+            title: 'Login Successful',
+            description: 'Redirecting to the admin dashboard...',
+          });
+          router.push('/admin/dashboard');
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Login Failed',
+            description: 'Invalid username or password.',
+          });
+        }
+    } catch(error) {
+        toast({
+            variant: 'destructive',
+            title: 'Login Error',
+            description: 'Could not connect to the database. Please try again later.',
+        });
+        console.error("Login failed:", error);
+    } finally {
+        setIsLoading(false);
     }
   };
 
   if (!isClient) {
-    return null; // Or a loading spinner
+    return (
+        <div className="flex min-h-screen flex-col items-center justify-center bg-secondary p-4">
+            <Loader2 className="h-16 w-16 animate-spin text-primary"/>
+        </div>
+    );
   }
 
   return (

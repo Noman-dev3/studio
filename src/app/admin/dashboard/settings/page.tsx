@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon, Contact } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,11 +23,9 @@ export default function SettingsPage() {
   const teachersFileRef = React.useRef<HTMLInputElement>(null);
   const resultsFileRef = React.useRef<HTMLInputElement>(null);
   
-  const [toppers, setToppers] = React.useState<Topper[]>([]);
   const [settings, setSettings] = React.useState<SiteSettings>(defaultSettings);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
-  const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
 
   React.useEffect(() => {
     const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
@@ -39,28 +37,8 @@ export default function SettingsPage() {
     const fetchSettings = async () => {
         setIsLoading(true);
         try {
-            const [savedToppers, savedSettings] = await Promise.all([
-                db.getToppers(),
-                db.getSettings()
-            ]);
-            setToppers(savedToppers);
-
-            // Deep merge saved settings with defaults to prevent crashes
-            const mergedSettings = {
-              ...defaultSettings,
-              ...savedSettings,
-              socials: {
-                ...defaultSettings.socials,
-                ...(savedSettings.socials || {}),
-              },
-              images: {
-                ...defaultSettings.images,
-                ...(savedSettings.images || {}),
-                gallery: savedSettings.images?.gallery || defaultSettings.images.gallery,
-              },
-            };
-            setSettings(mergedSettings);
-
+            const savedSettings = await db.getSettings();
+            setSettings(savedSettings);
         } catch (error) {
             console.error("Failed to fetch settings:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
@@ -73,27 +51,21 @@ export default function SettingsPage() {
   }, [router, toast]);
 
   const handleSettingsChange = (field: keyof SiteSettings, value: any) => {
-    if (settings) {
-        setSettings({ ...settings, [field]: value });
-    }
+    setSettings(prev => ({ ...prev, [field]: value }));
   };
-
-  const handleSocialChange = (platform: keyof SiteSettings['socials'], value: string) => {
-    if (settings) {
-      setSettings({
-        ...settings,
-        socials: {
-          ...settings.socials,
-          [platform]: value,
+  
+  const handleNestedChange = (
+    section: keyof SiteSettings, 
+    field: string,
+    value: any
+  ) => {
+    setSettings(prev => ({
+        ...prev,
+        [section]: {
+            ...(prev[section] as object),
+            [field]: value
         }
-      })
-    }
-  }
-
-  const handleImageChange = (field: keyof SiteSettings['images'], value: string) => {
-    if (settings) {
-      setSettings({ ...settings, images: { ...settings.images, [field]: value } });
-    }
+    }));
   };
 
   const handleImageUpload = (file: File, field: keyof SiteSettings['images']) => {
@@ -101,7 +73,7 @@ export default function SettingsPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
-        handleImageChange(field, e.target.result);
+        handleNestedChange('images', field, e.target.result);
         toast({ title: 'Image Staged', description: 'Click "Save All Changes" to make the change permanent.' });
       }
     };
@@ -109,23 +81,21 @@ export default function SettingsPage() {
   };
   
   const handleGalleryImageChange = (id: string, field: keyof GalleryImage, value: string) => {
-    if (settings) {
       const updatedGallery = (settings.images.gallery || []).map(img => 
         img.id === id ? { ...img, [field]: value } : img
       );
-      handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
-    }
+      handleNestedChange('images', 'gallery', updatedGallery);
   };
   
   const handleGalleryImageUpload = (file: File, id: string) => {
-    if (!file || !settings) return;
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
          const updatedGallery = (settings.images.gallery || []).map(img => 
             img.id === id ? { ...img, src: e.target?.result as string } : img
          );
-         handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
+         handleNestedChange('images', 'gallery', updatedGallery);
          toast({ title: 'Image Staged', description: 'Click "Save All Changes" to apply.' });
       }
     };
@@ -134,53 +104,52 @@ export default function SettingsPage() {
 
 
   const addGalleryImage = () => {
-    if(settings) {
       const newImage: GalleryImage = {
         id: Date.now().toString(),
         src: 'https://placehold.co/600x400.png',
         alt: 'New Gallery Image',
         hint: ''
       };
-       handleSettingsChange('images', {...settings.images, gallery: [...(settings.images.gallery || []), newImage]});
-    }
+       handleNestedChange('images', 'gallery', [...(settings.images.gallery || []), newImage]);
   };
 
   const removeGalleryImage = (id: string) => {
-    if(settings) {
       const updatedGallery = (settings.images.gallery || []).filter(img => img.id !== id);
-      handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
-    }
+      handleNestedChange('images', 'gallery', updatedGallery);
   };
 
 
   const handleListItemChange = <T extends { id: string }>(
-    list: T[],
+    listName: keyof SiteSettings,
     id: string,
     field: keyof T,
     value: any
-  ): T[] => {
-    return list.map(item => item.id === id ? { ...item, [field]: value } : item);
+  ) => {
+    const list = (settings[listName] as T[]) || [];
+    const updatedList = list.map(item => item.id === id ? { ...item, [field]: value } : item);
+    handleSettingsChange(listName, updatedList);
   };
   
-  const addListItem = <T extends { id: string }>(list: T[], newItem: T): T[] => {
-    return [...list, newItem];
+  const addListItem = <T extends { id: string }>(listName: keyof SiteSettings, newItem: T) => {
+    const list = (settings[listName] as T[]) || [];
+    handleSettingsChange(listName, [...list, newItem]);
   };
 
-  const removeListItem = <T extends { id: string }>(list: T[], id: string): T[] => {
-    return list.filter(item => item.id !== id);
+  const removeListItem = <T extends { id: string }>(listName: keyof SiteSettings, id: string) => {
+     const list = (settings[listName] as T[]) || [];
+     handleSettingsChange(listName, list.filter(item => item.id !== id));
   };
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
     try {
-        if(settings) await db.saveSettings(settings);
-        await db.saveToppers(toppers);
+        await db.saveSettings(settings);
         toast({
             title: "Settings Saved",
-            description: "Your changes have been successfully saved.",
+            description: "Your changes have been successfully saved to the database.",
         });
-    } catch {
-        toast({ variant: "destructive", title: "Error", description: "Failed to save settings." });
+    } catch (err: any) {
+        toast({ variant: "destructive", title: "Error", description: `Failed to save settings: ${err.message}` });
     } finally {
         setIsSaving(false);
     }
@@ -245,22 +214,6 @@ export default function SettingsPage() {
       reader.readAsText(file);
   };
   
-  const handleTopperChange = (field: keyof Topper, value: string) => {
-    setNewTopper(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAddTopper = () => {
-    if (!newTopper.name || !newTopper.grade || !newTopper.marks) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all fields for the new topper.' });
-        return;
-    }
-    const topperToAdd: Topper = { ...newTopper, id: Date.now().toString() };
-    setToppers(prev => [...prev, topperToAdd]);
-    setNewTopper({ name: '', grade: '', marks: '' }); // Reset form
-    toast({ title: 'Topper Added', description: 'Click "Save All Changes" to make it permanent.' });
-  };
-
-
   if (isLoading) {
     return (
       <AdminLayout activePage="settings">
@@ -270,7 +223,6 @@ export default function SettingsPage() {
       </AdminLayout>
     );
   }
-
 
   return (
     <AdminLayout activePage="settings">
@@ -288,9 +240,9 @@ export default function SettingsPage() {
         <div className="grid gap-8">
             <Alert>
                 <Info className="h-4 w-4" />
-                <AlertTitle>Configuration Change</AlertTitle>
+                <AlertTitle>Global Changes</AlertTitle>
                 <AlertDescription>
-                    Contact information (email, phone, address) and email server settings are now managed in the <code>.env</code> file for better security and server-side access.
+                   Your site is now connected to a global database. Any changes saved here will be visible to all users instantly.
                 </AlertDescription>
             </Alert>
 
@@ -306,10 +258,31 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><Contact/>Contact Information</CardTitle>
+                    <CardDescription>Update the public contact details for the school.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-4">
+                     <div className="space-y-2">
+                        <Label htmlFor="contactEmail">Contact Email</Label>
+                        <Input id="contactEmail" value={settings.contactEmail} onChange={e => handleSettingsChange('contactEmail', e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="contactPhone">Contact Phone</Label>
+                        <Input id="contactPhone" value={settings.contactPhone} onChange={e => handleSettingsChange('contactPhone', e.target.value)} />
+                    </div>
+                    <div className="space-y-2 md:col-span-2">
+                        <Label htmlFor="contactAddress">Contact Address</Label>
+                        <Textarea id="contactAddress" value={settings.contactAddress} onChange={e => handleSettingsChange('contactAddress', e.target.value)} />
+                    </div>
+                </CardContent>
+            </Card>
+
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><KeyRound/>Admin Credentials</CardTitle>
-                    <CardDescription>Change the username and password for accessing this admin dashboard. Default is admin/password.</CardDescription>
+                    <CardDescription>Change the username and password for accessing this admin dashboard.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -359,7 +332,7 @@ export default function SettingsPage() {
                                 type="file"
                                 accept="image/png, image/jpeg, image/gif, image/webp"
                                 className="hidden"
-                                onChange={e => e.target.files && handleImageUpload(e.target.files[0], field as keyof SiteSettings['images'])}
+                                onChange={e => e.target.files && handleImageUpload(e.target.files[0], field)}
                             />
                             <Button onClick={() => document.getElementById(`${field}-image-upload`)?.click()} variant="outline" className="w-full">
                                 <Upload className="mr-2 h-4 w-4"/> Upload File
@@ -383,12 +356,12 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                         {settings.features.map(feature => (
                             <div key={feature.id} className="flex items-center gap-2">
-                                <Input value={feature.text} onChange={e => handleSettingsChange('features', handleListItemChange(settings.features, feature.id, 'text', e.target.value))} />
-                                <Button variant="ghost" size="icon" onClick={() => handleSettingsChange('features', removeListItem(settings.features, feature.id))}><XCircle className="text-destructive" /></Button>
+                                <Input value={feature.text} onChange={e => handleListItemChange('features', feature.id, 'text', e.target.value)} />
+                                <Button variant="ghost" size="icon" onClick={() => removeListItem('features', feature.id)}><XCircle className="text-destructive" /></Button>
                             </div>
                         ))}
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => handleSettingsChange('features', addListItem(settings.features, {id: Date.now().toString(), text: ''}))}>
+                        <Button variant="outline" size="sm" onClick={() => addListItem('features', {id: Date.now().toString(), text: ''})}>
                             <PlusCircle className="mr-2 h-4 w-4"/> Add Feature
                         </Button>
                     </div>
@@ -447,19 +420,19 @@ export default function SettingsPage() {
                 <CardContent className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="facebook">Facebook URL</Label>
-                        <Input id="facebook" placeholder="https://facebook.com/your-page" value={settings.socials.facebook} onChange={e => handleSocialChange('facebook', e.target.value)} />
+                        <Input id="facebook" placeholder="https://facebook.com/your-page" value={settings.socials?.facebook} onChange={e => handleNestedChange('socials', 'facebook', e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="twitter">Twitter URL</Label>
-                        <Input id="twitter" placeholder="https://twitter.com/your-handle" value={settings.socials.twitter} onChange={e => handleSocialChange('twitter', e.target.value)} />
+                        <Input id="twitter" placeholder="https://twitter.com/your-handle" value={settings.socials?.twitter} onChange={e => handleNestedChange('socials', 'twitter', e.target.value)} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="instagram">Instagram URL</Label>
-                        <Input id="instagram" placeholder="https://instagram.com/your-account" value={settings.socials.instagram} onChange={e => handleSocialChange('instagram', e.target.value)} />
+                        <Input id="instagram" placeholder="https://instagram.com/your-account" value={settings.socials?.instagram} onChange={e => handleNestedChange('socials', 'instagram', e.target.value)} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="linkedin">LinkedIn URL</Label>
-                        <Input id="linkedin" placeholder="https://linkedin.com/in/your-profile" value={settings.socials.linkedin} onChange={e => handleSocialChange('linkedin', e.target.value)} />
+                        <Input id="linkedin" placeholder="https://linkedin.com/in/your-profile" value={settings.socials?.linkedin} onChange={e => handleNestedChange('socials', 'linkedin', e.target.value)} />
                     </div>
                 </CardContent>
             </Card>
@@ -471,12 +444,12 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                     {settings.announcements.map(item => (
                         <div key={item.id} className="flex items-center gap-2">
-                            <Input value={item.text} onChange={e => handleSettingsChange('announcements', handleListItemChange(settings.announcements, item.id, 'text', e.target.value))} />
-                            <Button variant="ghost" size="icon" onClick={() => handleSettingsChange('announcements', removeListItem(settings.announcements, item.id))}><XCircle className="text-destructive" /></Button>
+                            <Input value={item.text} onChange={e => handleListItemChange('announcements', item.id, 'text', e.target.value)} />
+                            <Button variant="ghost" size="icon" onClick={() => removeListItem('announcements', item.id)}><XCircle className="text-destructive" /></Button>
                         </div>
                     ))}
                     </div>
-                     <Button variant="outline" size="sm" onClick={() => handleSettingsChange('announcements', addListItem(settings.announcements, {id: Date.now().toString(), text: ''}))}>
+                     <Button variant="outline" size="sm" onClick={() => addListItem('announcements', {id: Date.now().toString(), text: ''})}>
                         <PlusCircle className="mr-2 h-4 w-4"/> Add Announcement
                     </Button>
                 </CardContent>
@@ -487,26 +460,26 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     {settings.events.map(event => (
                         <div key={event.id} className="p-4 border rounded-lg space-y-2 relative">
-                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => handleSettingsChange('events', removeListItem(settings.events, event.id))}>
+                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeListItem('events', event.id)}>
                                 <XCircle className="text-destructive" />
                             </Button>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-1">
                                     <Label>Date</Label>
-                                    <Input value={event.date} onChange={e => handleSettingsChange('events', handleListItemChange(settings.events, event.id, 'date', e.target.value))} placeholder="e.g. NOV 25"/>
+                                    <Input value={event.date} onChange={e => handleListItemChange('events', event.id, 'date', e.target.value)} placeholder="e.g. NOV 25"/>
                                 </div>
                                  <div className="space-y-1 col-span-2">
                                     <Label>Title</Label>
-                                    <Input value={event.title} onChange={e => handleSettingsChange('events', handleListItemChange(settings.events, event.id, 'title', e.target.value))} />
+                                    <Input value={event.title} onChange={e => handleListItemChange('events', event.id, 'title', e.target.value)} />
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <Label>Description</Label>
-                                <Textarea value={event.description} onChange={e => handleSettingsChange('events', handleListItemChange(settings.events, event.id, 'description', e.target.value))} />
+                                <Textarea value={event.description} onChange={e => handleListItemChange('events', event.id, 'description', e.target.value)} />
                             </div>
                         </div>
                     ))}
-                     <Button variant="outline" size="sm" onClick={() => handleSettingsChange('events', addListItem(settings.events, {id: Date.now().toString(), date: '', title: '', description: ''}))}>
+                     <Button variant="outline" size="sm" onClick={() => addListItem('events', {id: Date.now().toString(), date: '', title: '', description: ''})}>
                         <PlusCircle className="mr-2 h-4 w-4"/> Add Event
                     </Button>
                 </CardContent>
@@ -517,30 +490,30 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                      {settings.testimonials.map(item => (
                         <div key={item.id} className="p-4 border rounded-lg space-y-2 relative">
-                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => handleSettingsChange('testimonials', removeListItem(settings.testimonials, item.id))}>
+                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeListItem('testimonials', item.id)}>
                                 <XCircle className="text-destructive" />
                             </Button>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                  <div className="space-y-1">
                                     <Label>Name</Label>
-                                    <Input value={item.name} onChange={e => handleSettingsChange('testimonials', handleListItemChange(settings.testimonials, item.id, 'name', e.target.value))}/>
+                                    <Input value={item.name} onChange={e => handleListItemChange('testimonials', item.id, 'name', e.target.value)}/>
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Role</Label>
-                                    <Input value={item.role} onChange={e => handleSettingsChange('testimonials', handleListItemChange(settings.testimonials, item.id, 'role', e.target.value))}/>
+                                    <Input value={item.role} onChange={e => handleListItemChange('testimonials', item.id, 'role', e.target.value)}/>
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Avatar Text</Label>
-                                    <Input value={item.avatar} onChange={e => handleSettingsChange('testimonials', handleListItemChange(settings.testimonials, item.id, 'avatar', e.target.value))} placeholder="e.g. JD"/>
+                                    <Input value={item.avatar} onChange={e => handleListItemChange('testimonials', item.id, 'avatar', e.target.value)} placeholder="e.g. JD"/>
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <Label>Testimonial Text</Label>
-                                <Textarea value={item.text} onChange={e => handleSettingsChange('testimonials', handleListItemChange(settings.testimonials, item.id, 'text', e.target.value))} />
+                                <Textarea value={item.text} onChange={e => handleListItemChange('testimonials', item.id, 'text', e.target.value)} />
                             </div>
                         </div>
                     ))}
-                    <Button variant="outline" size="sm" onClick={() => handleSettingsChange('testimonials', addListItem(settings.testimonials, {id: Date.now().toString(), name: '', role: '', avatar: '', text: ''}))}>
+                    <Button variant="outline" size="sm" onClick={() => addListItem('testimonials', {id: Date.now().toString(), name: '', role: '', avatar: '', text: ''})}>
                         <PlusCircle className="mr-2 h-4 w-4"/> Add Testimonial
                     </Button>
                 </CardContent>
@@ -620,35 +593,29 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     <div className="border rounded-md p-2 mt-4 space-y-2">
                         <h4 className="font-medium">Current Toppers</h4>
-                        {toppers.length === 0 ? (
+                        {(settings.toppers || []).length === 0 ? (
                             <p className="text-sm text-muted-foreground">No toppers added yet.</p>
                         ) : (
-                            toppers.map(topper => (
+                            (settings.toppers || []).map(topper => (
                                 <div key={topper.id} className="flex justify-between items-center bg-secondary p-2 rounded-md">
                                     <p className="text-sm">{topper.name} ({topper.grade}) - {topper.marks}</p>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setToppers(toppers.filter(t => t.id !== topper.id))}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeListItem('toppers', topper.id)}>
                                         <XCircle className="h-4 w-4 text-destructive"/>
                                     </Button>
                                 </div>
                             ))
                         )}
                     </div>
-                    <div className="flex flex-col sm:flex-row gap-2 items-end pt-4">
-                        <div className="flex-1 space-y-2">
-                            <Label>New Topper</Label>
-                             <Input placeholder="Student Name" value={newTopper.name} onChange={e => handleTopperChange('name', e.target.value)} />
+                    <div className="pt-4">
+                        <Label>New Topper</Label>
+                        <div className="flex flex-col sm:flex-row gap-2 items-end mt-2">
+                             <Input placeholder="Student Name" onChange={e => handleListItemChange('toppers', 'new', 'name', e.target.value)} />
+                             <Input placeholder="Grade / Class" onChange={e => handleListItemChange('toppers', 'new', 'grade', e.target.value)} />
+                            <Input placeholder="Marks / Achievement" onChange={e => handleListItemChange('toppers', 'new', 'marks', e.target.value)} />
+                            <Button onClick={() => addListItem('toppers', {id: Date.now().toString(), name: '', grade: '', marks: ''})} className="w-full sm:w-auto">
+                                <PlusCircle className="mr-2 h-4 w-4" /> Add Topper
+                            </Button>
                         </div>
-                         <div className="flex-1 space-y-2">
-                             <Label>&nbsp;</Label>
-                            <Input placeholder="Grade / Class" value={newTopper.grade} onChange={e => handleTopperChange('grade', e.target.value)} />
-                        </div>
-                         <div className="flex-1 space-y-2">
-                            <Label>&nbsp;</Label>
-                            <Input placeholder="Marks / Achievement" value={newTopper.marks} onChange={e => handleTopperChange('marks', e.target.value)} />
-                        </div>
-                        <Button onClick={handleAddTopper} className="w-full sm:w-auto">
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Topper
-                        </Button>
                     </div>
                 </CardContent>
             </Card>
