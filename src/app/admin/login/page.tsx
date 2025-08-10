@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
     // IMPORTANT: This is a basic, insecure login for demonstration purposes.
     // In a real application, you must use a proper authentication service.
     if (data.username === 'admin' && data.password === 'password') {
-      sessionStorage.setItem('isAdminAuthenticated', 'true');
+      localStorage.setItem('isAdminAuthenticated', 'true');
       toast({
         title: 'Login Successful',
         description: 'Redirecting to the admin dashboard...',

@@ -63,7 +63,7 @@ export default function ResultManagementPage() {
   }, [toast]);
 
   React.useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
+    const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/admin/login');
       return;
@@ -113,8 +113,8 @@ export default function ResultManagementPage() {
     setIsSaving(true);
     
     const subjectsObject = currentSubjects.reduce((acc, subject) => {
-        if(subject.name) {
-            acc[subject.name] = subject.marks;
+        if(subject.name.trim()) {
+            acc[subject.name.trim()] = subject.marks;
         }
         return acc;
     }, {} as {[key: string]: number});

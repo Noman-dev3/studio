@@ -11,7 +11,7 @@ export default function AdmissionManagementPage() {
   const router = useRouter();
 
   React.useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
+    const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/admin/login');
     }

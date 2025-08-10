@@ -25,7 +25,7 @@ export default function SettingsPage() {
   const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
 
   React.useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
+    const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/admin/login');
       return;

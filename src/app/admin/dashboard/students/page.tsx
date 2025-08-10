@@ -90,7 +90,7 @@ export default function StudentManagementPage() {
   }, [toast]);
 
   React.useEffect(() => {
-    const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated');
+    const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
     if (isAuthenticated !== 'true') {
       router.replace('/admin/login');
       return;

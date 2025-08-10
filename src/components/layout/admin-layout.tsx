@@ -17,7 +17,7 @@ export function AdminLayout({ children, activePage }: AdminLayoutProps) {
   const router = useRouter();
 
   const handleLogout = () => {
-    sessionStorage.removeItem('isAdminAuthenticated');
+    localStorage.removeItem('isAdminAuthenticated');
     router.push('/admin/login');
   };
 
