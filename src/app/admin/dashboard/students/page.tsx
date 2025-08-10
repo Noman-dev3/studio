@@ -46,7 +46,6 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
@@ -75,6 +74,14 @@ export default function StudentManagementPage() {
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentFormSchema),
+    defaultValues: {
+        Roll_Number: '',
+        Name: '',
+        Class: '',
+        Gender: '',
+        Contact: '',
+        Address: ''
+    }
   });
 
   const fetchStudents = React.useCallback(async () => {
@@ -83,7 +90,7 @@ export default function StudentManagementPage() {
         const studentData = await db.getStudents();
         setStudents(studentData);
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch students from local storage.' });
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to fetch students from the database.' });
     } finally {
         setIsLoading(false);
     }

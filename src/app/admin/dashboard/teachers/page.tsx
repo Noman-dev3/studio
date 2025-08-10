@@ -49,7 +49,7 @@ export default function TeacherManagementPage() {
   const [teachers, setTeachers] = React.useState<Teacher[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [editingTeacherId, setEditingTeacherId] = React.useState<string | null>(null);
-  const [editingName, setEditingName] = React.useState('');
+  const [editingValues, setEditingValues] = React.useState<Partial<Teacher>>({});
 
   const fetchTeachers = React.useCallback(async () => {
     setIsLoading(true);
@@ -74,24 +74,28 @@ export default function TeacherManagementPage() {
 
   const handleEditClick = (teacher: Teacher) => {
     setEditingTeacherId(teacher.Teacher_ID);
-    setEditingName(teacher.Name);
+    setEditingValues(teacher);
   };
+  
+  const handleEditChange = (field: keyof Teacher, value: string) => {
+    setEditingValues(prev => ({...prev, [field]: value}));
+  }
 
   const handleCancelEdit = () => {
     setEditingTeacherId(null);
-    setEditingName('');
+    setEditingValues({});
   };
 
-  const handleSaveName = async (teacherId: string) => {
+  const handleSaveChanges = async (teacherId: string) => {
     const updatedTeachers = teachers.map(t => 
-        t.Teacher_ID === teacherId ? { ...t, Name: editingName } : t
+        t.Teacher_ID === teacherId ? { ...t, ...editingValues } as Teacher : t
     );
     try {
         await db.saveTeachers(updatedTeachers);
         setTeachers(updatedTeachers);
-        toast({ title: 'Success', description: "Teacher's name updated." });
+        toast({ title: 'Success', description: "Teacher's record updated." });
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Error', description: 'Failed to save name change.' });
+        toast({ variant: 'destructive', title: 'Error', description: 'Failed to save changes.' });
     } finally {
         handleCancelEdit();
     }
@@ -160,58 +164,81 @@ export default function TeacherManagementPage() {
                     <TableCell className="font-medium">{teacher.Teacher_ID}</TableCell>
                     <TableCell>
                       {editingTeacherId === teacher.Teacher_ID ? (
-                        <div className="flex items-center gap-2">
                            <Input 
-                                value={editingName} 
-                                onChange={(e) => setEditingName(e.target.value)}
+                                value={editingValues.Name || ''} 
+                                onChange={(e) => handleEditChange('Name', e.target.value)}
                                 className="h-8"
                             />
-                            <Button size="icon" className="h-8 w-8" onClick={() => handleSaveName(teacher.Teacher_ID)}><Save className="h-4 w-4"/></Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancelEdit}><X className="h-4 w-4"/></Button>
-                        </div>
                       ) : (
                         teacher.Name
                       )}
                     </TableCell>
-                    <TableCell>{teacher.Contact}</TableCell>
-                    <TableCell>{teacher.Salary}</TableCell>
+                    <TableCell>
+                        {editingTeacherId === teacher.Teacher_ID ? (
+                           <Input 
+                                value={editingValues.Contact || ''} 
+                                onChange={(e) => handleEditChange('Contact', e.target.value)}
+                                className="h-8"
+                            />
+                      ) : (
+                        teacher.Contact
+                      )}
+                    </TableCell>
+                    <TableCell>
+                        {editingTeacherId === teacher.Teacher_ID ? (
+                           <Input 
+                                value={editingValues.Salary || ''} 
+                                onChange={(e) => handleEditChange('Salary', e.target.value)}
+                                className="h-8"
+                            />
+                      ) : (
+                        teacher.Salary
+                      )}
+                    </TableCell>
                     <TableCell>{format(new Date(teacher.Date_Joined), "PPP")}</TableCell>
                     <TableCell>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                        <Button aria-haspopup="true" size="icon" variant="ghost">
-                            <MoreHorizontal className="h-4 w-4" />
-                            <span className="sr-only">Toggle menu</span>
-                        </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEditClick(teacher)}>
-                            <Edit className="mr-2 h-4 w-4" /> Edit Name
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4"/> Delete
+                     {editingTeacherId === teacher.Teacher_ID ? (
+                        <div className="flex items-center gap-2">
+                            <Button size="icon" className="h-8 w-8" onClick={() => handleSaveChanges(teacher.Teacher_ID)}><Save className="h-4 w-4"/></Button>
+                            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleCancelEdit}><X className="h-4 w-4"/></Button>
+                        </div>
+                      ) : (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Toggle menu</span>
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEditClick(teacher)}>
+                                <Edit className="mr-2 h-4 w-4" /> Edit Record
                             </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This action cannot be undone. This will permanently delete the teacher's record.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(teacher.Teacher_ID)}>Continue</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                            <DropdownMenuSeparator />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                 <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4"/> Delete
+                                </DropdownMenuItem>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the teacher's record.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDelete(teacher.Teacher_ID)}>Continue</AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
 
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </TableCell>
                 </TableRow>
                 )))}

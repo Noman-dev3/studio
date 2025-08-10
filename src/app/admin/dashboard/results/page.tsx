@@ -78,7 +78,7 @@ export default function ResultManagementPage() {
         id: `${student.Roll_Number}-${name}-${index}`,
         name,
         marks: Number(marks)
-    })) : [];
+    })) : [{ id: Date.now().toString(), name: 'Mathematics', marks: 0 }];
     setCurrentSubjects(subjectsArray);
     setIsModalOpen(true);
   };
@@ -127,7 +127,6 @@ export default function ResultManagementPage() {
     const existingResult = results.find(r => r.roll_number === selectedStudent.Roll_Number);
 
     const newResult: StudentResult = {
-      ...(existingResult || {}),
       student_name: selectedStudent.Name,
       roll_number: selectedStudent.Roll_Number,
       class: selectedStudent.Class,

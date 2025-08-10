@@ -4,7 +4,7 @@
 import { z } from 'zod';
 import { headers } from 'next/headers';
 import { smartSearch, type SmartSearchInput } from '@/ai/flows/smart-search';
-import { db, type Student, SiteSettings } from '@/lib/db';
+import { db, type Student } from '@/lib/db';
 import { contactFormSchema } from '@/lib/schemas';
 
 // Helper to check for admin authentication
@@ -106,14 +106,8 @@ export async function updateStudent(data: Student) {
         return { success: false, message: 'Invalid student data.' };
     }
     try {
-        const students = await db.getStudents();
-        const studentIndex = students.findIndex(s => s.Roll_Number === data.Roll_Number);
-        if (studentIndex !== -1) {
-            students[studentIndex] = data;
-            await db.saveStudents(students);
-            return { success: true, message: 'Student updated successfully.' };
-        }
-        return { success: false, message: 'Student not found.' };
+        await db.saveStudents([data]);
+        return { success: true, message: 'Student updated successfully.' };
 
     } catch (error) {
         return { success: false, message: 'Failed to update student.' };

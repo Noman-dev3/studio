@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { admissionFormSchema } from '@/lib/schemas';
+import { db } from '@/lib/db';
 
 type AdmissionFormValues = z.infer<typeof admissionFormSchema>;
 
@@ -36,7 +37,18 @@ export function AdmissionsForm() {
 
   const onSubmit = async (data: AdmissionFormValues) => {
     try {
-      const response = await fetch('/api/contact', {
+        
+      // Also save to the database for admin review
+      await db.saveAdmission({
+        ...data,
+        dob: data.dob.toISOString(),
+        status: 'Pending',
+        applicationDate: new Date().toISOString()
+      });
+
+
+      // Send email notification
+      const emailResponse = await fetch('/api/contact', {
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -48,8 +60,8 @@ export function AdmissionsForm() {
           }),
       });
 
-      if (!response.ok) {
-          throw new Error('Network response was not ok');
+      if (!emailResponse.ok) {
+          throw new Error('Email notification failed');
       }
 
       toast({

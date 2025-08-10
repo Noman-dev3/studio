@@ -1,7 +1,7 @@
 
 'use client';
 import { rtdb } from './firebase'; // Use Realtime Database
-import { ref, get, set, remove, child } from 'firebase/database';
+import { ref, get, set, remove, child, update } from 'firebase/database';
 
 
 export interface Student {
@@ -20,7 +20,6 @@ export interface Teacher {
   Salary: string;
   Photo_Path: string;
   Date_Joined: string; // Stored as ISO string
-  isDummy?: boolean;
 }
 
 export interface Topper {
@@ -183,9 +182,9 @@ export const defaultSettings: SiteSettings = {
 const rootRef = ref(rtdb);
 
 // Helper to convert snapshot object to array
-const snapshotToArray = <T>(snapshotVal: { [key: string]: T } | null): T[] => {
+const snapshotToArray = <T>(snapshotVal: { [key: string]: Omit<T, 'id'> } | null): T[] => {
   if (!snapshotVal) return [];
-  return Object.keys(snapshotVal).map(key => ({ ...snapshotVal[key], id: key }));
+  return Object.keys(snapshotVal).map(key => ({ ...(snapshotVal[key] as T), id: key }));
 };
 
 const dbService = {
@@ -213,7 +212,7 @@ const dbService = {
     students.forEach(student => {
       updates[`/students/${student.Roll_Number}`] = student;
     });
-    await set(ref(rtdb), updates);
+    await update(ref(rtdb), updates);
   },
   deleteStudent: async (rollNumber: string): Promise<void> => {
     await remove(child(rootRef, `students/${rollNumber}`));
@@ -229,7 +228,7 @@ const dbService = {
     teachers.forEach(teacher => {
       updates[`/teachers/${teacher.Teacher_ID}`] = teacher;
     });
-    await set(ref(rtdb), updates);
+    await update(ref(rtdb), updates);
   },
   deleteTeacher: async (teacherId: string): Promise<void> => {
      await remove(child(rootRef, `teachers/${teacherId}`));
@@ -281,16 +280,19 @@ const dbService = {
     const snapshot = await get(child(rootRef, 'admissions'));
     return snapshotToArray<Admission>(snapshot.val());
   },
-  saveAdmission: async (admission: Admission): Promise<void> => {
-    const admissionRef = child(rootRef, `admissions/${admission.id}`);
-    await set(admissionRef, admission);
+  saveAdmission: async (admission: Omit<Admission, 'id'>): Promise<string> => {
+    const newId = Date.now().toString();
+    const newAdmission: Admission = { ...admission, id: newId };
+    const admissionRef = child(rootRef, `admissions/${newId}`);
+    await set(admissionRef, newAdmission);
+    return newId;
   },
   saveAdmissions: async (admissions: Admission[]): Promise<void> => {
     const updates: { [key: string]: Admission } = {};
     admissions.forEach(adm => {
       updates[`/admissions/${adm.id}`] = adm;
     });
-    await set(ref(rtdb), updates);
+    await update(ref(rtdb), updates);
   },
 };
 

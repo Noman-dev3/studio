@@ -27,6 +27,7 @@ export default function SettingsPage() {
   const [settings, setSettings] = React.useState<SiteSettings>(defaultSettings);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [newTopper, setNewTopper] = React.useState<Omit<Topper, 'id'>>({ name: '', grade: '', marks: '' });
 
   React.useEffect(() => {
     const checkAuthAndFetch = async () => {
@@ -147,6 +148,16 @@ export default function SettingsPage() {
      const list = (settings[listName] as T[]) || [];
      handleSettingsChange(listName, list.filter(item => item.id !== id));
   };
+  
+  const handleAddTopper = () => {
+    if (newTopper.name && newTopper.grade && newTopper.marks) {
+        addListItem('toppers', { ...newTopper, id: Date.now().toString() });
+        setNewTopper({ name: '', grade: '', marks: '' });
+    } else {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please fill all fields for the new topper.' });
+    }
+  };
+
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
@@ -617,10 +628,10 @@ export default function SettingsPage() {
                     <div className="pt-4">
                         <Label>New Topper</Label>
                         <div className="flex flex-col sm:flex-row gap-2 items-end mt-2">
-                             <Input placeholder="Student Name" onChange={e => handleListItemChange('toppers', 'new', 'name', e.target.value)} />
-                             <Input placeholder="Grade / Class" onChange={e => handleListItemChange('toppers', 'new', 'grade', e.target.value)} />
-                            <Input placeholder="Marks / Achievement" onChange={e => handleListItemChange('toppers', 'new', 'marks', e.target.value)} />
-                            <Button onClick={() => addListItem('toppers', {id: Date.now().toString(), name: '', grade: '', marks: ''})} className="w-full sm:w-auto">
+                             <Input placeholder="Student Name" value={newTopper.name} onChange={e => setNewTopper(p => ({...p, name: e.target.value}))} />
+                             <Input placeholder="Grade / Class" value={newTopper.grade} onChange={e => setNewTopper(p => ({...p, grade: e.target.value}))} />
+                            <Input placeholder="Marks / Achievement" value={newTopper.marks} onChange={e => setNewTopper(p => ({...p, marks: e.target.value}))} />
+                            <Button onClick={handleAddTopper} className="w-full sm:w-auto">
                                 <PlusCircle className="mr-2 h-4 w-4" /> Add Topper
                             </Button>
                         </div>
