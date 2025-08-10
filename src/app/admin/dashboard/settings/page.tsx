@@ -44,7 +44,7 @@ export default function SettingsPage() {
                 db.getSettings()
             ]);
             setToppers(savedToppers);
-            setSettings(savedSettings);
+            setSettings(savedSettings || defaultSettings);
         } catch (error) {
             console.error("Failed to fetch settings:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
@@ -94,7 +94,7 @@ export default function SettingsPage() {
   
   const handleGalleryImageChange = (id: string, field: keyof GalleryImage, value: string) => {
     if (settings) {
-      const updatedGallery = settings.images.gallery.map(img => 
+      const updatedGallery = (settings.images.gallery || []).map(img => 
         img.id === id ? { ...img, [field]: value } : img
       );
       handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
@@ -106,7 +106,7 @@ export default function SettingsPage() {
     const reader = new FileReader();
     reader.onload = (e) => {
       if (typeof e.target?.result === 'string') {
-         const updatedGallery = settings.images.gallery.map(img => 
+         const updatedGallery = (settings.images.gallery || []).map(img => 
             img.id === id ? { ...img, src: e.target?.result as string } : img
          );
          handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
@@ -125,13 +125,13 @@ export default function SettingsPage() {
         alt: 'New Gallery Image',
         hint: ''
       };
-       handleSettingsChange('images', {...settings.images, gallery: [...settings.images.gallery, newImage]});
+       handleSettingsChange('images', {...settings.images, gallery: [...(settings.images.gallery || []), newImage]});
     }
   };
 
   const removeGalleryImage = (id: string) => {
     if(settings) {
-      const updatedGallery = settings.images.gallery.filter(img => img.id !== id);
+      const updatedGallery = (settings.images.gallery || []).filter(img => img.id !== id);
       handleSettingsChange('images', {...settings.images, gallery: updatedGallery});
     }
   };
@@ -386,7 +386,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {settings.images.gallery.map(image => (
+                  {(settings.images?.gallery || []).map(image => (
                     <div key={image.id} className="border rounded-lg p-3 space-y-2">
                         <Image src={image.src || "https://placehold.co/200x150.png"} alt={image.alt} width={200} height={150} className="w-full object-cover aspect-video rounded-md" />
                         <div className="space-y-1">
@@ -647,3 +647,5 @@ export default function SettingsPage() {
     </AdminLayout>
   );
 }
+
+    
