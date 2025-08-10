@@ -11,6 +11,7 @@ import { Skeleton } from '../ui/skeleton';
 export function Hero() {
   const [title, setTitle] = React.useState('');
   const [subtitle, setSubtitle] = React.useState('');
+  const [heroImage, setHeroImage] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
@@ -19,6 +20,7 @@ export function Hero() {
       const settings = await db.getSettings();
       setTitle(settings.heroTitle);
       setSubtitle(settings.heroSubtitle);
+      setHeroImage(settings.images.hero);
       setIsLoading(false);
     };
     fetchSettings();
@@ -27,11 +29,17 @@ export function Hero() {
   return (
     <section id="home" className="relative h-[80vh] min-h-[600px] flex items-center justify-center text-white">
       <div className="absolute inset-0 bg-primary/80 z-10"></div>
-      <div 
-        className="absolute inset-0 bg-cover bg-center" 
-        style={{ backgroundImage: "url('https://placehold.co/1920x1080.png')" }}
-        data-ai-hint="school building students"
-      ></div>
+      
+      {isLoading ? 
+        <Skeleton className="absolute inset-0" />
+      :
+        <div 
+          className="absolute inset-0 bg-cover bg-center" 
+          style={{ backgroundImage: `url('${heroImage}')` }}
+          data-ai-hint="school building students"
+        ></div>
+      }
+
 
       <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {isLoading ? (

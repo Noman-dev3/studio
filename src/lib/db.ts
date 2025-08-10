@@ -89,6 +89,13 @@ export interface Testimonial {
   text: string;
 }
 
+export interface GalleryImage {
+  id: string;
+  src: string;
+  alt: string;
+  hint: string;
+}
+
 export interface SiteSettings {
   schoolName: string;
   heroTitle: string;
@@ -106,6 +113,12 @@ export interface SiteSettings {
     instagram: string;
     linkedin: string;
   };
+  images: {
+    hero: string;
+    about: string;
+    location: string;
+    gallery: GalleryImage[];
+  }
 }
 
 
@@ -168,6 +181,19 @@ const defaultSettings: SiteSettings = {
         twitter: '#',
         instagram: '#',
         linkedin: '#'
+    },
+    images: {
+      hero: "https://placehold.co/1920x1080.png",
+      about: "https://placehold.co/600x500.png",
+      location: "https://placehold.co/600x500.png",
+      gallery: [
+        { id: '1', src: "https://placehold.co/600x400.png", alt: "Students in a classroom", hint: "students classroom" },
+        { id: '2', src: "https://placehold.co/600x400.png", alt: "School library", hint: "school library" },
+        { id: '3', src: "https://placehold.co/600x400.png", alt: "Science lab experiment", hint: "science lab" },
+        { id: '4', src: "https://placehold.co/600x400.png", alt: "Students playing sports", hint: "students sports" },
+        { id: '5', src: "https://placehold.co/600x400.png", alt: "Art class", hint: "art class" },
+        { id: '6', src: "https://placehold.co/600x400.png", alt: "School assembly", hint: "school assembly" },
+      ]
     }
 };
 

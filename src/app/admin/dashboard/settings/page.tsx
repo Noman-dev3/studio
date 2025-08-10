@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,9 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { db, Topper, StudentResult, SiteSettings, Feature, Announcement, Event, Testimonial } from '@/lib/db';
+import { db, Topper, StudentResult, SiteSettings, Feature, Announcement, Event, Testimonial, GalleryImage } from '@/lib/db';
 import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import Image from 'next/image';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -66,6 +67,53 @@ export default function SettingsPage() {
       })
     }
   }
+
+  const handleImageChange = (field: keyof SiteSettings['images'], value: string) => {
+    if (settings) {
+      setSettings({ ...settings, images: { ...settings.images, [field]: value } });
+    }
+  };
+
+  const handleImageUpload = (file: File, field: keyof SiteSettings['images']) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (typeof e.target?.result === 'string') {
+        handleImageChange(field, e.target.result);
+        toast({ title: 'Image Uploaded', description: 'Click "Save All Changes" to apply.' });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+  
+  const handleGalleryImageChange = (id: string, field: keyof GalleryImage, value: string) => {
+    if (settings) {
+      const updatedGallery = settings.images.gallery.map(img => 
+        img.id === id ? { ...img, [field]: value } : img
+      );
+      handleImageChange('gallery', updatedGallery as any);
+    }
+  };
+
+  const addGalleryImage = () => {
+    if(settings) {
+      const newImage: GalleryImage = {
+        id: Date.now().toString(),
+        src: 'https://placehold.co/600x400.png',
+        alt: 'New Gallery Image',
+        hint: ''
+      };
+      handleImageChange('gallery', [...settings.images.gallery, newImage] as any);
+    }
+  };
+
+  const removeGalleryImage = (id: string) => {
+    if(settings) {
+      const updatedGallery = settings.images.gallery.filter(img => img.id !== id);
+      handleImageChange('gallery', updatedGallery as any);
+    }
+  };
+
 
   const handleListItemChange = <T extends { id: string }>(
     list: T[],
@@ -238,6 +286,42 @@ export default function SettingsPage() {
                 </CardContent>
             </Card>
 
+             <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><ImageIcon/>Image Management</CardTitle>
+                    <CardDescription>Update main images on the website by providing a URL or uploading a file.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-3 gap-6">
+                    {['hero', 'about', 'location'].map(field => (
+                        <div key={field} className="space-y-2">
+                           <Label htmlFor={`${field}-image`} className="capitalize">{field} Image</Label>
+                            <Image 
+                                src={(settings.images as any)[field]} 
+                                alt={`${field} preview`} 
+                                width={300} height={200} 
+                                className="rounded-md border aspect-video object-cover"
+                            />
+                            <Input 
+                                id={`${field}-image-url`}
+                                placeholder="Enter image URL"
+                                value={(settings.images as any)[field]}
+                                onChange={e => handleImageChange(field as keyof SiteSettings['images'], e.target.value)}
+                            />
+                            <Input 
+                                id={`${field}-image-upload`}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={e => e.target.files && handleImageUpload(e.target.files[0], field as keyof SiteSettings['images'])}
+                            />
+                            <Button onClick={() => document.getElementById(`${field}-image-upload`)?.click()} variant="outline" className="w-full">
+                                <Upload className="mr-2 h-4 w-4"/> Upload File
+                            </Button>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+
             <Card>
                 <CardHeader>
                     <CardTitle>About Section</CardTitle>
@@ -263,6 +347,41 @@ export default function SettingsPage() {
                     </div>
                 </CardContent>
             </Card>
+            
+            <Card>
+              <CardHeader>
+                <CardTitle>Gallery Section</CardTitle>
+                <CardDescription>Manage images in the homepage gallery.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {settings.images.gallery.map(image => (
+                    <div key={image.id} className="border rounded-lg p-3 space-y-2">
+                        <Image src={image.src} alt={image.alt} width={200} height={150} className="w-full object-cover aspect-video rounded-md" />
+                        <div className="space-y-1">
+                          <Label htmlFor={`gallery-src-${image.id}`} className="text-xs">Image URL or Data URL</Label>
+                          <Input id={`gallery-src-${image.id}`} value={image.src} onChange={e => handleGalleryImageChange(image.id, 'src', e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor={`gallery-alt-${image.id}`} className="text-xs">Alt Text</Label>
+                          <Input id={`gallery-alt-${image.id}`} value={image.alt} onChange={e => handleGalleryImageChange(image.id, 'alt', e.target.value)} />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor={`gallery-hint-${image.id}`} className="text-xs">AI Hint</Label>
+                          <Input id={`gallery-hint-${image.id}`} value={image.hint} onChange={e => handleGalleryImageChange(image.id, 'hint', e.target.value)} />
+                        </div>
+                        <Button variant="outline" size="sm" className="w-full text-destructive" onClick={() => removeGalleryImage(image.id)}>
+                            <XCircle className="mr-2 h-4 w-4"/> Remove Image
+                        </Button>
+                    </div>
+                  ))}
+                </div>
+                <Button variant="outline" onClick={addGalleryImage}>
+                  <PlusCircle className="mr-2 h-4 w-4"/> Add Gallery Image
+                </Button>
+              </CardContent>
+            </Card>
+
 
             <Card>
                 <CardHeader>

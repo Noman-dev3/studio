@@ -60,14 +60,16 @@ export function About() {
           <div className="w-full h-full">
             <Card className="overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300">
               <CardContent className="p-0">
-                <Image
-                  src="https://placehold.co/600x500.png"
-                  alt="School campus"
-                  width={600}
-                  height={500}
-                  className="object-cover w-full h-full"
-                  data-ai-hint="modern school campus"
-                />
+                {isLoading ? <Skeleton className="w-[600px] h-[500px]" /> :
+                  <Image
+                    src={settings.images?.about || "https://placehold.co/600x500.png"}
+                    alt="School campus"
+                    width={600}
+                    height={500}
+                    className="object-cover w-full h-full"
+                    data-ai-hint="modern school campus"
+                  />
+                }
               </CardContent>
             </Card>
           </div>

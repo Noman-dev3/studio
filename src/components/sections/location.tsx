@@ -5,13 +5,28 @@ import { Card } from '@/components/ui/card';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import * as React from 'react';
 import Image from 'next/image';
+import { db } from '@/lib/db';
+import { Skeleton } from '../ui/skeleton';
 
 export function Location() {
+  const [settings, setSettings] = React.useState<any>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
   const contactInfo = {
     email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@piiss.edu',
     phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+92 123 4567890',
     address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Road, Karachi, Pakistan',
   };
+
+  React.useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      const siteSettings = await db.getSettings();
+      setSettings(siteSettings);
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
 
   return (
     <section id="location" className="py-16 md:py-24 bg-secondary">
@@ -26,14 +41,16 @@ export function Location() {
         <Card className="overflow-hidden shadow-xl">
           <div className="grid md:grid-cols-2">
             <div className="md:col-span-1 h-96 md:h-full w-full bg-muted flex items-center justify-center">
-                 <Image
-                  src="https://placehold.co/600x500.png"
-                  alt="School location placeholder"
-                  width={600}
-                  height={500}
-                  className="object-cover w-full h-full"
-                  data-ai-hint="map location"
-                />
+                 {isLoading ? <Skeleton className="w-full h-full" /> : 
+                    <Image
+                      src={settings.images?.location || "https://placehold.co/600x500.png"}
+                      alt="School location placeholder"
+                      width={600}
+                      height={500}
+                      className="object-cover w-full h-full"
+                      data-ai-hint="map location"
+                    />
+                 }
             </div>
             <div className="p-8 bg-card flex flex-col justify-center">
               <h3 className="text-2xl font-bold text-primary mb-6">Find Us Here</h3>
