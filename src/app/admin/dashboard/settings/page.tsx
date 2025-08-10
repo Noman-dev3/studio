@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { db, Topper, StudentResult, SiteSettings, Feature, Announcement, Event, Testimonial, GalleryImage } from '@/lib/db';
+import { db, Topper, StudentResult, SiteSettings, Feature, Announcement, Event, Testimonial, GalleryImage, defaultSettings } from '@/lib/db';
 import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
@@ -24,7 +24,7 @@ export default function SettingsPage() {
   const resultsFileRef = React.useRef<HTMLInputElement>(null);
   
   const [toppers, setToppers] = React.useState<Topper[]>([]);
-  const [settings, setSettings] = React.useState<SiteSettings | null>(null);
+  const [settings, setSettings] = React.useState<SiteSettings>(defaultSettings);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
   const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
@@ -245,7 +245,7 @@ export default function SettingsPage() {
   };
 
 
-  if (isLoading || !settings) {
+  if (isLoading) {
     return (
       <AdminLayout activePage="settings">
         <div className="flex items-center justify-center h-full">
@@ -333,7 +333,7 @@ export default function SettingsPage() {
                         <div key={field} className="space-y-2">
                            <Label htmlFor={`${field}-image`} className="capitalize">{field} Image</Label>
                             <Image 
-                                src={(settings.images as any)[field] || "https://placehold.co/300x200.png"} 
+                                src={(settings.images?.[field]) || "https://placehold.co/300x200.png"} 
                                 alt={`${field} preview`} 
                                 width={300} height={200} 
                                 className="rounded-md border aspect-video object-cover"

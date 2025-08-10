@@ -148,7 +148,7 @@ const saveToLocalStorage = <T>(key: string, value: T) => {
     }
 }
 
-const defaultSettings: SiteSettings = {
+export const defaultSettings: SiteSettings = {
     schoolName: "Pakistan Islamic International School System",
     heroTitle: "Excellence in Education, Rooted in Faith",
     heroSubtitle: "Nurturing young minds to become future leaders through a blend of world-class academics and timeless Islamic values.",
