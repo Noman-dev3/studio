@@ -3,8 +3,8 @@
 
 import { z } from 'zod';
 import { smartSearch, type SmartSearchInput } from '@/ai/flows/smart-search';
-import { db, type Admission, Student, Teacher } from '@/lib/db';
-import { contactFormSchema, admissionFormSchema } from '@/lib/schemas';
+import { db, type Student } from '@/lib/db';
+import { contactFormSchema } from '@/lib/schemas';
 
 export async function handleSmartSearch(input: SmartSearchInput) {
   try {
@@ -58,17 +58,6 @@ export async function deleteTeacher(teacherId: string) {
     }
 }
 
-// Action to delete a fee slip
-export async function deleteFee(feeId: string) {
-    try {
-        await db.deleteFee(feeId);
-        return { success: true, message: 'Fee slip deleted successfully.' };
-    } catch (error) {
-        console.error('Failed to delete fee:', error);
-        return { success: false, message: 'Failed to delete fee.' };
-    }
-}
-
 // Action to update student
 const studentFormSchema = z.object({
   Roll_Number: z.string(),
@@ -96,5 +85,28 @@ export async function updateStudent(data: Student) {
 
     } catch (error) {
         return { success: false, message: 'Failed to update student.' };
+    }
+}
+
+const checkResultSchema = z.object({
+    rollNumber: z.string().min(1, "Roll number is required."),
+});
+
+export async function checkResult(data: { rollNumber: string }) {
+    const parsed = checkResultSchema.safeParse(data);
+    if (!parsed.success) {
+        return { success: false, message: 'Invalid input.' };
+    }
+
+    try {
+        const result = await db.getResultByRollNumber(data.rollNumber);
+        if (result) {
+            return { success: true, data: result };
+        } else {
+            return { success: false, message: "No result found for this roll number. Please check the roll number and try again." };
+        }
+    } catch (error) {
+        console.error("Result check failed:", error);
+        return { success: false, message: "An error occurred while checking the result." };
     }
 }

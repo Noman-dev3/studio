@@ -36,18 +36,6 @@ export interface Subject {
   marks: number;
 }
 
-export interface Fee {
-  id: string;
-  studentRollNumber: string;
-  studentName: string;
-  grade: string;
-  amount: number;
-  dueDate: string; // ISO String
-  status: 'Paid' | 'Pending' | 'Overdue';
-  paymentDate?: string; // ISO String
-}
-
-
 export interface StudentResult {
   studentRollNumber: string;
   subjects: Subject[];
@@ -140,83 +128,33 @@ export const db = {
     return Promise.resolve();
   },
 
-  // === Fee Methods ===
-  getFees: async (): Promise<Fee[]> => {
-    return Promise.resolve(getFromLocalStorage<Fee[]>('fees', []));
-  },
-  saveFee: async (fee: Fee): Promise<void> => {
-    const fees = await db.getFees();
-    const existingIndex = fees.findIndex(f => f.id === fee.id);
-    if (existingIndex !== -1) {
-      fees[existingIndex] = fee;
-    } else {
-      fees.push(fee);
-    }
-    saveToLocalStorage('fees', fees);
-    return Promise.resolve();
-  },
-  saveFees: async (fees: Fee[]): Promise<void> => {
-    saveToLocalStorage('fees', fees);
-    return Promise.resolve();
-  },
-  deleteFee: async (feeId: string): Promise<void> => {
-    let fees = await db.getFees();
-    fees = fees.filter(f => f.id !== feeId);
-    saveToLocalStorage('fees', fees);
-    return Promise.resolve();
-  },
-
   // === Result Methods ===
   getResults: async (): Promise<StudentResult[]> => {
       return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
   },
-  getResultsForClass: async (className: string): Promise<StudentResult[]> => {
-    const allResults = await db.getResults();
-    const allStudents = await db.getStudents();
-    const studentIdsInClass = allStudents
-        .filter(s => s.Class === className)
-        .map(s => s.Roll_Number);
-    
-    return Promise.resolve(allResults.filter(r => studentIdsInClass.includes(r.studentRollNumber)));
+  getResultByRollNumber: async (rollNumber: string): Promise<StudentResult | null> => {
+      const results = await db.getResults();
+      const result = results.find(r => r.studentRollNumber === rollNumber) || null;
+      return Promise.resolve(result);
   },
   saveResult: async (result: StudentResult): Promise<void> => {
     let results = await db.getResults();
-    const allStudents = await db.getStudents();
     const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
+    
+    // Simplified: remove position logic
+    const newResultData = { ...result };
+    delete newResultData.position;
+
     if (existingIndex !== -1) {
-        results[existingIndex] = result;
+        results[existingIndex] = newResultData;
     } else {
-        results.push(result);
-    }
-
-    const student = allStudents.find(s => s.Roll_Number === result.studentRollNumber);
-    if (student) {
-        const classResults = await db.getResultsForClass(student.Class);
-        // Ensure the current result is included for calculation if it's new
-        const currentResultIndex = classResults.findIndex(r => r.studentRollNumber === result.studentRollNumber);
-        if (currentResultIndex === -1) {
-            classResults.push(result);
-        } else {
-            classResults[currentResultIndex] = result;
-        }
-
-        classResults.sort((a, b) => b.percentage - a.percentage);
-        
-        const positionMap: { [key: string]: '1st' | '2nd' | '3rd' | 'No Position' } = {};
-        
-        if(classResults.length > 0) positionMap[classResults[0].studentRollNumber] = '1st';
-        if(classResults.length > 1) positionMap[classResults[1].studentRollNumber] = '2nd';
-        if(classResults.length > 2) positionMap[classResults[2].studentRollNumber] = '3rd';
-
-        results = results.map(r => {
-            const studentForPos = allStudents.find(s => s.Roll_Number === r.studentRollNumber);
-            if (studentForPos?.Class === student.Class) {
-                return { ...r, position: positionMap[r.studentRollNumber] || 'No Position' };
-            }
-            return r;
-        });
+        results.push(newResultData);
     }
     
+    saveToLocalStorage('results', results);
+    return Promise.resolve();
+  },
+   saveResults: async (results: StudentResult[]): Promise<void> => {
     saveToLocalStorage('results', results);
     return Promise.resolve();
   },

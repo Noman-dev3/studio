@@ -19,6 +19,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const studentsFileRef = React.useRef<HTMLInputElement>(null);
   const teachersFileRef = React.useRef<HTMLInputElement>(null);
+  const resultsFileRef = React.useRef<HTMLInputElement>(null);
   
   const [toppers, setToppers] = React.useState<Topper[]>([]);
   const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
@@ -50,7 +51,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleFileUpload = (file: File | undefined, type: 'students' | 'teachers') => {
+  const handleFileUpload = (file: File | undefined, type: 'students' | 'teachers' | 'results') => {
     if (!file) {
         toast({ variant: "destructive", title: "Upload Failed", description: "Please select a file to upload." });
         return;
@@ -59,17 +60,29 @@ export default function SettingsPage() {
     Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
+        dynamicTyping: true,
         complete: async (results) => {
             try {
                 if (type === 'students') {
                     await db.saveStudents(results.data as any);
-                    toast({ title: "Success", description: "Students data has been uploaded and saved." });
-                } else {
+                    toast({ title: "Success", description: "Students data has been uploaded." });
+                } else if (type === 'teachers') {
                     await db.saveTeachers(results.data as any);
-                    toast({ title: "Success", description: "Teachers data has been uploaded and saved." });
+                    toast({ title: "Success", description: "Teachers data has been uploaded." });
+                } else if (type === 'results') {
+                    // The result CSV needs to be transformed before saving
+                    const transformedResults = (results.data as any[]).map(row => ({
+                      studentRollNumber: row.studentRollNumber,
+                      subjects: JSON.parse(row.subjects), // Assuming subjects are a JSON string
+                      totalMarks: row.totalMarks,
+                      percentage: row.percentage,
+                      grade: row.grade,
+                    }));
+                    await db.saveResults(transformedResults);
+                    toast({ title: "Success", description: "Results data has been uploaded." });
                 }
             } catch (error) {
-                 toast({ variant: "destructive", title: "Save Failed", description: "There was an error saving the data." });
+                 toast({ variant: "destructive", title: "Save Failed", description: `There was an error saving the data. Please check the CSV format. Error: ${error}` });
             }
         },
         error: (error) => {
@@ -113,9 +126,9 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Data Management</CardTitle>
-                    <CardDescription>Upload CSV files to populate student and teacher data. This will overwrite any existing data.</CardDescription>
+                    <CardDescription>Upload CSV files to populate site data. This will overwrite any existing data.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="grid md:grid-cols-3 gap-6">
                     <div className="space-y-2">
                         <Label htmlFor="students-csv">Students Data</Label>
                         <div className="flex items-center gap-2">
@@ -127,12 +140,12 @@ export default function SettingsPage() {
                                 onChange={(e) => handleFileUpload(e.target.files?.[0], 'students')}
                                 className="hidden" 
                             />
-                            <Button onClick={() => studentsFileRef.current?.click()}>
+                            <Button onClick={() => studentsFileRef.current?.click()} className="w-full">
                                 <Upload className="mr-2 h-4 w-4" /> Upload CSV
                             </Button>
                         </div>
                          <p className="text-sm text-muted-foreground">
-                            Required columns: Name, Roll_Number, Class, Gender, Contact, Address
+                            Columns: Name, Roll_Number, Class, Gender, Contact, Address
                         </p>
                     </div>
                     <div className="space-y-2">
@@ -146,12 +159,31 @@ export default function SettingsPage() {
                                 onChange={(e) => handleFileUpload(e.target.files?.[0], 'teachers')}
                                 className="hidden"
                             />
-                             <Button onClick={() => teachersFileRef.current?.click()}>
+                             <Button onClick={() => teachersFileRef.current?.click()} className="w-full">
                                 <Upload className="mr-2 h-4 w-4" /> Upload CSV
                             </Button>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                           Required columns: Name, Teacher_ID, Contact, Salary, Photo_Path, Date_Joined
+                           Columns: Name, Teacher_ID, Contact, Salary, Photo_Path, Date_Joined
+                        </p>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="results-csv">Results Data</Label>
+                         <div className="flex items-center gap-2">
+                             <Input 
+                                id="results-csv" 
+                                type="file" 
+                                accept=".csv" 
+                                ref={resultsFileRef}
+                                onChange={(e) => handleFileUpload(e.target.files?.[0], 'results')}
+                                className="hidden"
+                            />
+                             <Button onClick={() => resultsFileRef.current?.click()} className="w-full">
+                                <Upload className="mr-2 h-4 w-4" /> Upload CSV
+                            </Button>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                           Columns: studentRollNumber, subjects (as JSON string), totalMarks, percentage, grade
                         </p>
                     </div>
                 </CardContent>

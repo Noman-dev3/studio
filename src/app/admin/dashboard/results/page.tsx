@@ -35,7 +35,6 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, type Student, type StudentResult, type Subject } from '@/lib/db';
-import { Badge } from '@/components/ui/badge';
 
 export default function ResultManagementPage() {
   const router = useRouter();
@@ -124,7 +123,7 @@ export default function ResultManagementPage() {
     try {
       await db.saveResult(newResult);
       toast({ title: 'Success', description: `Report card for ${selectedStudent.Name} has been saved.` });
-      await fetchData(); // Refresh data to show updated positions
+      await fetchData(); 
       setIsModalOpen(false);
     } catch (error) {
       toast({ variant: 'destructive', title: 'Error', description: 'Failed to save the report card.' });
@@ -137,16 +136,6 @@ export default function ResultManagementPage() {
     return results.find(r => r.studentRollNumber === rollNumber);
   };
 
-  const getPositionVariant = (position?: string) => {
-    switch (position) {
-        case '1st': return 'default';
-        case '2nd': return 'secondary';
-        case '3rd': return 'outline';
-        default: return 'destructive';
-    }
-  }
-
-
   return (
     <AdminLayout activePage="results">
         <Card>
@@ -154,7 +143,7 @@ export default function ResultManagementPage() {
             <div className="flex items-center justify-between">
             <div>
                 <CardTitle>Results Management</CardTitle>
-                <CardDescription>Create and manage student report cards and positions.</CardDescription>
+                <CardDescription>Create and manage student report cards.</CardDescription>
             </div>
             </div>
         </CardHeader>
@@ -167,18 +156,17 @@ export default function ResultManagementPage() {
                 <TableHead>Class</TableHead>
                 <TableHead>Percentage</TableHead>
                 <TableHead>Grade</TableHead>
-                <TableHead>Position</TableHead>
                 <TableHead><span className="sr-only">Actions</span></TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
                 {isLoading ? (
                     <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">Loading...</TableCell>
+                        <TableCell colSpan={6} className="h-24 text-center">Loading...</TableCell>
                     </TableRow>
                 ) : students.length === 0 ? (
                 <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center">
+                    <TableCell colSpan={6} className="h-24 text-center">
                     No students found. Upload student data in settings.
                     </TableCell>
                 </TableRow>
@@ -192,11 +180,6 @@ export default function ResultManagementPage() {
                         <TableCell>{student.Class}</TableCell>
                         <TableCell>{result ? `${result.percentage}%` : 'N/A'}</TableCell>
                         <TableCell>{result ? result.grade : 'N/A'}</TableCell>
-                        <TableCell>
-                            {result?.position && result.position !== 'No Position' ? (
-                                <Badge variant={getPositionVariant(result.position)}>{result.position}</Badge>
-                            ) : 'N/A'}
-                        </TableCell>
                         <TableCell>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>

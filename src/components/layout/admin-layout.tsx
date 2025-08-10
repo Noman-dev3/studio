@@ -4,13 +4,13 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Home, LogOut, Settings, Users, UserSquare, FileCheck, DollarSign, Award } from 'lucide-react';
+import { Home, LogOut, Settings, Users, UserSquare, FileCheck, Award } from 'lucide-react';
 import { PiissLogo } from '@/components/icons/piiss-logo';
 import { Button } from '@/components/ui/button';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  activePage: 'dashboard' | 'students' | 'teachers' | 'admissions' | 'fees' | 'results' | 'settings';
+  activePage: 'dashboard' | 'students' | 'teachers' | 'admissions' | 'results' | 'settings';
 }
 
 export function AdminLayout({ children, activePage }: AdminLayoutProps) {
@@ -26,7 +26,6 @@ export function AdminLayout({ children, activePage }: AdminLayoutProps) {
     { id: 'admissions', href: '/admin/dashboard/admissions', icon: <FileCheck className="mr-3" />, label: 'Admissions' },
     { id: 'students', href: '/admin/dashboard/students', icon: <Users className="mr-3" />, label: 'Students' },
     { id: 'teachers', href: '/admin/dashboard/teachers', icon: <UserSquare className="mr-3" />, label: 'Teachers' },
-    { id: 'fees', href: '/admin/dashboard/fees', icon: <DollarSign className="mr-3" />, label: 'Fees' },
     { id: 'results', href: '/admin/dashboard/results', icon: <Award className="mr-3" />, label: 'Results' },
     { id: 'settings', href: '/admin/dashboard/settings', icon: <Settings className="mr-3" />, label: 'Settings' },
   ];
