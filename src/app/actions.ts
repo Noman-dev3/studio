@@ -9,16 +9,20 @@ import { contactFormSchema } from '@/lib/schemas';
 
 // Helper to check for admin authentication
 async function isAdminAuthenticated() {
-  // In a real app, you'd use a proper auth system (e.g., Firebase Auth, NextAuth).
-  // For this prototype, we'll check a header or a similar mechanism.
-  // This is a simplified check and should be replaced with a robust solution.
-  const settings = await db.getSettings();
-  const adminUsername = headers().get('X-Admin-Username');
-  const adminPassword = headers().get('X-Admin-Password');
-  
-  // NOTE: This is NOT a secure way to handle authentication.
-  // It's a placeholder for the prototype.
-  return adminUsername === settings.adminUsername && adminPassword === settings.adminPassword;
+  // This is a simplified check for the prototype and should be
+  // replaced with a robust auth system like Firebase Auth in a real app.
+  try {
+    const settings = await db.getSettings();
+    const adminUsernameHeader = headers().get('X-Admin-Username');
+    const adminPasswordHeader = headers().get('X-Admin-Password');
+    
+    // NOTE: This is NOT a secure way to handle authentication for a production app.
+    // It's a placeholder for the prototype.
+    return adminUsernameHeader === settings.adminUsername && adminPasswordHeader === settings.adminPassword;
+  } catch (error) {
+    console.error("Authentication check failed:", error);
+    return false;
+  }
 }
 
 
