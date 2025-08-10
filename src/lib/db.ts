@@ -112,13 +112,6 @@ export interface SiteSettings {
   contactEmail: string;
   contactPhone: string;
   contactAddress: string;
-  emailSettings: {
-    host: string;
-    port: number;
-    user: string;
-    pass: string;
-    from: string;
-  },
   socials: {
     facebook: string;
     twitter: string;
@@ -165,13 +158,6 @@ export const defaultSettings: SiteSettings = {
     contactEmail: 'contact@piiss.edu',
     contactPhone: '+1 234 567 890',
     contactAddress: '123 Education Lane, Knowledge City',
-    emailSettings: {
-        host: '',
-        port: 587,
-        user: '',
-        pass: '',
-        from: ''
-    },
     socials: {
         facebook: '#',
         twitter: '#',
@@ -211,7 +197,6 @@ const dbService = {
       return {
         ...defaultSettings,
         ...dbSettings,
-        emailSettings: { ...defaultSettings.emailSettings, ...dbSettings.emailSettings },
         socials: { ...defaultSettings.socials, ...dbSettings.socials },
         images: { ...defaultSettings.images, ...dbSettings.images },
       };
