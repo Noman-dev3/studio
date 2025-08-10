@@ -64,6 +64,42 @@ export interface Admission {
   applicationDate: string; // ISO String
 }
 
+export interface Announcement {
+  id: string;
+  text: string;
+}
+
+export interface Feature {
+  id: string;
+  text: string;
+}
+
+export interface Event {
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+}
+
+export interface Testimonial {
+  id: string;
+  name: string;
+  role: string;
+  avatar: string;
+  text: string;
+}
+
+export interface SiteSettings {
+  schoolName: string;
+  heroTitle: string;
+  heroSubtitle: string;
+  aboutText: string;
+  announcements: Announcement[];
+  features: Feature[];
+  events: Event[];
+  testimonials: Testimonial[];
+}
+
 
 // Helper function to safely access local storage
 const getFromLocalStorage = <T>(key: string, defaultValue: T): T => {
@@ -91,9 +127,47 @@ const saveToLocalStorage = <T>(key: string, value: T) => {
     }
 }
 
+const defaultSettings: SiteSettings = {
+    schoolName: "Pakistan Islamic International School System",
+    heroTitle: "Excellence in Education, Rooted in Faith",
+    heroSubtitle: "Nurturing young minds to become future leaders through a blend of world-class academics and timeless Islamic values.",
+    aboutText: "At PIISS, we are dedicated to providing a balanced and comprehensive education that integrates academic excellence with profound Islamic values. Our mission is to nurture a new generation of leaders who are knowledgeable, pious, and ready to contribute positively to the global community.",
+    announcements: [
+        { id: '1', text: "Annual Sports Day on December 15th. All are welcome!" },
+        { id: '2', text: "Parent-Teacher meetings scheduled for the last week of November." },
+        { id: '3', text: "Admissions for the 2024-2025 academic year are now open." },
+    ],
+    features: [
+        { id: '1', text: "Holistic Islamic & Academic Education" },
+        { id: '2', text: "Certified & Experienced Faculty" },
+        { id: '3', text: "State-of-the-Art Facilities" },
+        { id: '4', text: "Focus on Character Building" },
+    ],
+    events: [
+        { id: '1', date: "NOV 25", title: "Annual Science Fair", description: "Showcasing innovative projects from our talented students. Open to all parents and guardians." },
+        { id: '2', date: "DEC 15", title: "Annual Sports Day", description: "A day of friendly competition, teamwork, and athletic achievement. Come cheer for our students!" },
+        { id: '3', date: "JAN 10", title: "Charity Bake Sale", description: "Raising funds for local community projects. Your support can make a huge difference." },
+    ],
+    testimonials: [
+        { id: '1', name: "The Rahman Family", role: "Parent", avatar: "RF", text: "PIISS has been a blessing for our children. The blend of high-quality education and Islamic teachings is exactly what we were looking for. The teachers are caring and professional." },
+        { id: '2', name: "Ali Abdullah", role: "Alumnus, Class of 2022", avatar: "AA", text: "My time at PIISS prepared me not just for university but for life. I developed a strong sense of identity and purpose. I am forever grateful to my teachers and peers." },
+        { id: '3', name: "The Siddiqui Family", role: "Parent", avatar: "SF", text: "We are impressed by the school's commitment to excellence in all areas. The facilities are wonderful, and there's a strong sense of community. Highly recommended." },
+    ]
+};
+
+
 // --- Data Access Functions ---
 // All these functions are async to simulate real database calls
 export const db = {
+  // === Settings Methods ===
+  getSettings: async (): Promise<SiteSettings> => {
+    return Promise.resolve(getFromLocalStorage<SiteSettings>('site_settings', defaultSettings));
+  },
+  saveSettings: async (settings: SiteSettings): Promise<void> => {
+    saveToLocalStorage('site_settings', settings);
+    return Promise.resolve();
+  },
+
   // === Student Methods ===
   getStudents: async (): Promise<Student[]> => {
     return Promise.resolve(getFromLocalStorage<Student[]>('students', []));

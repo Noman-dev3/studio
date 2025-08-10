@@ -1,15 +1,28 @@
+
+'use client';
+import * as React from 'react';
 import { Megaphone } from 'lucide-react';
+import { db, Announcement } from '@/lib/db';
 
 export function Announcements() {
-  const newsItems = [
-    "Annual Sports Day on December 15th. All are welcome!",
-    "Parent-Teacher meetings scheduled for the last week of November.",
-    "Admissions for the 2024-2025 academic year are now open.",
-    "Science Fair submissions are due by November 10th.",
-    "School will be closed for a national holiday on November 1st."
-  ];
+  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
 
-  const fullText = newsItems.join(' ••• ');
+  React.useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      const settings = await db.getSettings();
+      setAnnouncements(settings.announcements || []);
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (isLoading || announcements.length === 0) {
+    return null; // Don't render if loading or no announcements
+  }
+
+  const fullText = announcements.map(item => item.text).join(' ••• ');
 
   return (
     <section id="announcements" className="bg-primary text-primary-foreground relative">

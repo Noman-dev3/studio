@@ -1,5 +1,6 @@
-'use client';
 
+'use client';
+import * as React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
@@ -10,29 +11,46 @@ import {
 } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
+import { db, Testimonial } from '@/lib/db';
+import { Skeleton } from '../ui/skeleton';
 
-const testimonials = [
-  {
-    name: "The Rahman Family",
-    role: "Parent",
-    avatar: "RF",
-    text: "PIISS has been a blessing for our children. The blend of high-quality education and Islamic teachings is exactly what we were looking for. The teachers are caring and professional."
-  },
-  {
-    name: "Ali Abdullah",
-    role: "Alumnus, Class of 2022",
-    avatar: "AA",
-    text: "My time at PIISS prepared me not just for university but for life. I developed a strong sense of identity and purpose. I am forever grateful to my teachers and peers."
-  },
-  {
-    name: "The Siddiqui Family",
-    role: "Parent",
-    avatar: "SF",
-    text: "We are impressed by the school's commitment to excellence in all areas. The facilities are wonderful, and there's a strong sense of community. Highly recommended."
-  }
-];
 
 export function Testimonials() {
+  const [testimonials, setTestimonials] = React.useState<Testimonial[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      const settings = await db.getSettings();
+      setTestimonials(settings.testimonials || []);
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (isLoading) {
+    return (
+       <section id="testimonials" className="py-16 md:py-24 bg-background">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <Skeleton className="h-10 w-2/3 mx-auto" />
+              <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Skeleton className="h-56 w-full" />
+              <Skeleton className="h-56 w-full" />
+              <Skeleton className="h-56 w-full" />
+            </div>
+          </div>
+       </section>
+    );
+  }
+
+  if (testimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section id="testimonials" className="py-16 md:py-24 bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,8 +69,8 @@ export function Testimonials() {
           className="w-full max-w-4xl mx-auto"
         >
           <CarouselContent>
-            {testimonials.map((testimonial, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+            {testimonials.map((testimonial) => (
+              <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
                 <div className="p-1 h-full">
                   <Card className="h-full flex flex-col justify-between shadow-lg">
                     <CardContent className="p-6">

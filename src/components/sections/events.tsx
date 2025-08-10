@@ -1,31 +1,49 @@
+
+'use client';
+import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
-
-const events = [
-  {
-    date: "NOV 25",
-    title: "Annual Science Fair",
-    description: "Showcasing innovative projects from our talented students. Open to all parents and guardians."
-  },
-  {
-    date: "DEC 15",
-    title: "Annual Sports Day",
-    description: "A day of friendly competition, teamwork, and athletic achievement. Come cheer for our students!"
-  },
-  {
-    date: "JAN 10",
-    title: "Charity Bake Sale",
-    description: "Raising funds for local community projects. Your support can make a huge difference."
-  },
-  {
-    date: "FEB 05",
-    title: "International Day Celebration",
-    description: "A vibrant celebration of the diverse cultures within our school community."
-  }
-];
+import { db, Event } from '@/lib/db';
+import { Skeleton } from '../ui/skeleton';
 
 export function Events() {
+  const [events, setEvents] = React.useState<Event[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadData() {
+      setIsLoading(true);
+      const settings = await db.getSettings();
+      setEvents(settings.events || []);
+      setIsLoading(false);
+    }
+    loadData();
+  }, []);
+
+  if (isLoading) {
+    return (
+       <section id="events" className="py-16 md:py-24 bg-secondary">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto text-center mb-12">
+              <Skeleton className="h-10 w-2/3 mx-auto" />
+              <Skeleton className="h-6 w-1/2 mx-auto mt-4" />
+            </div>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+            </div>
+          </div>
+       </section>
+    );
+  }
+
+  if (events.length === 0) {
+    return null;
+  }
+
   return (
     <section id="events" className="py-16 md:py-24 bg-secondary">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
@@ -37,8 +55,8 @@ export function Events() {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {events.map((event, index) => (
-            <Card key={index} className="flex flex-col overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
+          {events.map((event) => (
+            <Card key={event.id} className="flex flex-col overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-2 transition-all duration-300">
               <CardHeader className="flex-grow">
                 <div className="flex items-center text-destructive font-bold mb-2">
                   <Calendar className="w-5 h-5 mr-2" />

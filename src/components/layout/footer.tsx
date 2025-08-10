@@ -1,18 +1,30 @@
 
 'use client';
 
+import * as React from 'react';
 import { PiissLogo } from "@/components/icons/piiss-logo";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
-import * as React from 'react';
+import { db } from '@/lib/db';
 
 export function Footer() {
-  // Contact info is now read from environment variables, which are available client-side
-  const contactInfo = {
-    email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@piiss.edu',
-    phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+1 (234) 567-890',
-    address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Lane, Knowledge City, 12345',
-  };
+  const [contactInfo, setContactInfo] = React.useState({
+    email: '',
+    phone: '',
+    address: '',
+  });
+
+  React.useEffect(() => {
+    async function loadContactInfo() {
+      // In a real app, this might come from settings, but for now we keep it in .env for server-side access
+      setContactInfo({
+        email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@example.com',
+        phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+1 (234) 567-890',
+        address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Lane, Knowledge City, 12345',
+      });
+    }
+    loadContactInfo();
+  }, []);
 
   return (
     <footer className="bg-secondary text-secondary-foreground">

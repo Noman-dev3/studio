@@ -1,10 +1,29 @@
+
 'use client';
 
+import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { db } from '@/lib/db';
+import { Skeleton } from '../ui/skeleton';
 
 export function Hero() {
+  const [title, setTitle] = React.useState('');
+  const [subtitle, setSubtitle] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const fetchSettings = async () => {
+      setIsLoading(true);
+      const settings = await db.getSettings();
+      setTitle(settings.heroTitle);
+      setSubtitle(settings.heroSubtitle);
+      setIsLoading(false);
+    };
+    fetchSettings();
+  }, []);
+
   return (
     <section id="home" className="relative h-[80vh] min-h-[600px] flex items-center justify-center text-white">
       <div className="absolute inset-0 bg-primary/80 z-10"></div>
@@ -15,12 +34,22 @@ export function Hero() {
       ></div>
 
       <div className="relative z-20 container mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-white drop-shadow-lg animate-fade-in-up">
-          Excellence in Education, Rooted in Faith
-        </h1>
-        <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-primary-foreground/90 drop-shadow-md animate-fade-in-up animation-delay-300">
-          Nurturing young minds to become future leaders through a blend of world-class academics and timeless Islamic values.
-        </p>
+        {isLoading ? (
+          <div className="space-y-4 max-w-3xl mx-auto">
+            <Skeleton className="h-16 w-full" />
+            <Skeleton className="h-8 w-3/4 mx-auto" />
+            <Skeleton className="h-8 w-1/2 mx-auto" />
+          </div>
+        ) : (
+          <>
+            <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-white drop-shadow-lg animate-fade-in-up">
+              {title}
+            </h1>
+            <p className="mt-6 max-w-3xl mx-auto text-lg md:text-xl text-primary-foreground/90 drop-shadow-md animate-fade-in-up animation-delay-300">
+              {subtitle}
+            </p>
+          </>
+        )}
         <div className="mt-10 flex justify-center gap-4 animate-fade-in-up animation-delay-600">
           <Button asChild size="lg" variant="destructive">
             <Link href="#contact">
