@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon, Image as ImageIcon, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +16,12 @@ import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
 
+type ImageUrlState = {
+    hero: string;
+    about: string;
+    location: string;
+};
+
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -27,6 +33,14 @@ export default function SettingsPage() {
   const [settings, setSettings] = React.useState<SiteSettings | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSaving, setIsSaving] = React.useState(false);
+  const [newTopper, setNewTopper] = React.useState({ name: '', grade: '', marks: '' });
+
+  // State to hold the temporary URL inputs
+  const [imageUrls, setImageUrls] = React.useState<ImageUrlState>({
+      hero: '',
+      about: '',
+      location: ''
+  });
 
 
   React.useEffect(() => {
@@ -38,17 +52,30 @@ export default function SettingsPage() {
 
     const fetchSettings = async () => {
         setIsLoading(true);
-        const [savedToppers, savedSettings] = await Promise.all([
-            db.getToppers(),
-            db.getSettings()
-        ]);
-        setToppers(savedToppers);
-        setSettings(savedSettings);
-        setIsLoading(false);
+        try {
+            const [savedToppers, savedSettings] = await Promise.all([
+                db.getToppers(),
+                db.getSettings()
+            ]);
+            setToppers(savedToppers);
+            setSettings(savedSettings);
+             if (savedSettings?.images) {
+                setImageUrls({
+                    hero: savedSettings.images.hero || '',
+                    about: savedSettings.images.about || '',
+                    location: savedSettings.images.location || '',
+                });
+            }
+        } catch (error) {
+            console.error("Failed to fetch settings:", error);
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
+        } finally {
+            setIsLoading(false);
+        }
     }
     fetchSettings();
 
-  }, [router]);
+  }, [router, toast]);
 
   const handleSettingsChange = (field: keyof SiteSettings, value: any) => {
     if (settings) {
@@ -68,11 +95,19 @@ export default function SettingsPage() {
     }
   }
 
+  // This function now just updates the main settings object.
   const handleImageChange = (field: keyof SiteSettings['images'], value: string) => {
     if (settings) {
       setSettings({ ...settings, images: { ...settings.images, [field]: value } });
     }
   };
+  
+  // This function is triggered by the "Update" button for URLs
+  const handleImageUrlUpdate = (field: keyof ImageUrlState) => {
+      handleImageChange(field, imageUrls[field]);
+      toast({ title: 'Image URL Updated', description: `The ${field} image URL has been staged. Click "Save All Changes" to apply.` });
+  };
+
 
   const handleImageUpload = (file: File, field: keyof SiteSettings['images']) => {
     if (!file) return;
@@ -190,7 +225,6 @@ export default function SettingsPage() {
               
               const resultData: StudentResult = JSON.parse(jsonContent);
 
-              // Basic validation to match the expected structure
               if (!resultData.roll_number || !resultData.subjects) {
                 throw new Error("Invalid JSON format. Missing 'roll_number' or 'subjects'.");
               }
@@ -208,6 +242,22 @@ export default function SettingsPage() {
       reader.readAsText(file);
   };
   
+  const handleTopperChange = (field: keyof Topper, value: string) => {
+    setNewTopper(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddTopper = () => {
+    if (!newTopper.name || !newTopper.grade || !newTopper.marks) {
+        toast({ variant: 'destructive', title: 'Error', description: 'Please fill out all fields for the new topper.' });
+        return;
+    }
+    const topperToAdd: Topper = { ...newTopper, id: Date.now().toString() };
+    setToppers(prev => [...prev, topperToAdd]);
+    setNewTopper({ name: '', grade: '', marks: '' }); // Reset form
+    toast({ title: 'Topper Added', description: 'Click "Save All Changes" to make it permanent.' });
+  };
+
+
   if (isLoading || !settings) {
     return (
       <AdminLayout activePage="settings">
@@ -256,7 +306,7 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><KeyRound/>Admin Credentials</CardTitle>
-                    <CardDescription>Change the username and password for accessing this admin dashboard.</CardDescription>
+                    <CardDescription>Change the username and password for accessing this admin dashboard. Default is admin/password.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
@@ -292,7 +342,7 @@ export default function SettingsPage() {
                     <CardDescription>Update main images on the website by providing a URL or uploading a file.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-3 gap-6">
-                    {['hero', 'about', 'location'].map(field => (
+                    {(['hero', 'about', 'location'] as const).map(field => (
                         <div key={field} className="space-y-2">
                            <Label htmlFor={`${field}-image`} className="capitalize">{field} Image</Label>
                             <Image 
@@ -301,12 +351,15 @@ export default function SettingsPage() {
                                 width={300} height={200} 
                                 className="rounded-md border aspect-video object-cover"
                             />
-                            <Input 
-                                id={`${field}-image-url`}
-                                placeholder="Enter image URL"
-                                value={(settings.images as any)[field]}
-                                onChange={e => handleImageChange(field as keyof SiteSettings['images'], e.target.value)}
-                            />
+                            <div className="flex gap-2">
+                                <Input 
+                                    id={`${field}-image-url`}
+                                    placeholder="Enter image URL"
+                                    value={imageUrls[field]}
+                                    onChange={e => setImageUrls(prev => ({...prev, [field]: e.target.value}))}
+                                />
+                                <Button onClick={() => handleImageUrlUpdate(field)} size="icon"><Check/></Button>
+                            </div>
                             <Input 
                                 id={`${field}-image-upload`}
                                 type="file"
@@ -580,15 +633,15 @@ export default function SettingsPage() {
                     <div className="flex flex-col sm:flex-row gap-2 items-end pt-4">
                         <div className="flex-1 space-y-2">
                             <Label>New Topper</Label>
-                             <Input placeholder="Student Name" onChange={e => handleTopperChange('name', e.target.value)} />
+                             <Input placeholder="Student Name" value={newTopper.name} onChange={e => handleTopperChange('name', e.target.value)} />
                         </div>
                          <div className="flex-1 space-y-2">
                              <Label>&nbsp;</Label>
-                            <Input placeholder="Grade / Class" onChange={e => handleTopperChange('grade', e.target.value)} />
+                            <Input placeholder="Grade / Class" value={newTopper.grade} onChange={e => handleTopperChange('grade', e.target.value)} />
                         </div>
                          <div className="flex-1 space-y-2">
                             <Label>&nbsp;</Label>
-                            <Input placeholder="Marks / Achievement" onChange={e => handleTopperChange('marks', e.target.value)} />
+                            <Input placeholder="Marks / Achievement" value={newTopper.marks} onChange={e => handleTopperChange('marks', e.target.value)} />
                         </div>
                         <Button onClick={handleAddTopper} className="w-full sm:w-auto">
                             <PlusCircle className="mr-2 h-4 w-4" /> Add Topper
@@ -606,12 +659,4 @@ export default function SettingsPage() {
         </div>
     </AdminLayout>
   );
-
-  function handleTopperChange(field: keyof Topper, value: string) {
-      // Helper for new topper state - not implemented yet to simplify
-  }
-
-  function handleAddTopper() {
-    //
-  }
 }
