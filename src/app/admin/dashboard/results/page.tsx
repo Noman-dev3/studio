@@ -191,10 +191,10 @@ export default function ResultManagementPage() {
                     </TableCell>
                 </TableRow>
                 ) : (
-                students.map((student) => {
+                students.map((student, index) => {
                   const result = getResultForStudent(student.Roll_Number);
                   return (
-                    <TableRow key={student.Roll_Number}>
+                    <TableRow key={`${student.Roll_Number}-${index}`}>
                         <TableCell className="font-medium">{student.Roll_Number}</TableCell>
                         <TableCell>{student.Name}</TableCell>
                         <TableCell>{student.Class}</TableCell>
