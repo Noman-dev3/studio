@@ -17,6 +17,9 @@ import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
 
+// Helper type to get only the keys of SiteSettings that are arrays
+type ArrayKeys<T> = { [K in keyof T]: T[K] extends any[] ? K : never }[keyof T];
+
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -123,23 +126,23 @@ export default function SettingsPage() {
 
 
   const handleListItemChange = <T extends { id: string }>(
-    listName: keyof SiteSettings,
+    listName: ArrayKeys<SiteSettings>,
     id: string,
     field: keyof T,
     value: any
   ) => {
-    const list = (settings[listName] as T[]) || [];
+    const list = (settings[listName] as T[] | undefined) || [];
     const updatedList = list.map(item => item.id === id ? { ...item, [field]: value } : item);
     handleSettingsChange(listName, updatedList);
   };
   
-  const addListItem = <T extends { id: string }>(listName: keyof SiteSettings, newItem: T) => {
-    const list = (settings[listName] as T[]) || [];
+  const addListItem = <T extends { id: string }>(listName: ArrayKeys<SiteSettings>, newItem: T) => {
+    const list = (settings[listName] as T[] | undefined) || [];
     handleSettingsChange(listName, [...list, newItem]);
   };
 
-  const removeListItem = <T extends { id: string }>(listName: keyof SiteSettings, id: string) => {
-     const list = (settings[listName] as T[]) || [];
+  const removeListItem = <T extends { id: string }>(listName: ArrayKeys<SiteSettings>, id: string) => {
+     const list = (settings[listName] as T[] | undefined) || [];
      handleSettingsChange(listName, list.filter(item => item.id !== id));
   };
   
