@@ -4,24 +4,22 @@ import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
-import { db, Event } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
 export function Events() {
-  const [events, setEvents] = React.useState<Event[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
+  const isLoading = !settings;
+  const events = settings?.events || [];
 
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const settings = await db.getSettings();
-      setEvents(settings.events || []);
-      setIsLoading(false);
-    }
-    loadData();
+    const fetchSettings = async () => {
+      const settingsData = await db.getSettings();
+      setSettings(settingsData);
+    };
+    fetchSettings();
   }, []);
+
 
   if (isLoading) {
     return (

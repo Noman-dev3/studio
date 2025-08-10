@@ -11,24 +11,20 @@ import {
 } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Star } from "lucide-react";
-import { db, Testimonial } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
-
 export function Testimonials() {
-  const [testimonials, setTestimonials] = React.useState<Testimonial[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
+  const isLoading = !settings;
+  const testimonials = settings?.testimonials || [];
 
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const settings = await db.getSettings();
-      setTestimonials(settings.testimonials || []);
-      setIsLoading(false);
-    }
-    loadData();
+    const fetchSettings = async () => {
+        const settingsData = await db.getSettings();
+        setSettings(settingsData);
+    };
+    fetchSettings();
   }, []);
 
   if (isLoading) {

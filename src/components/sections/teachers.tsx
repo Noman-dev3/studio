@@ -4,25 +4,21 @@
 import * as React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { db, Teacher } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { Teacher, db } from '@/lib/db';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function Teachers() {
-  const [teachers, setTeachers] = React.useState<Teacher[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [teachers, setTeachers] = React.useState<Teacher[] | null>(null);
+  const isLoading = !teachers;
 
   React.useEffect(() => {
-    async function loadTeachers() {
-      setIsLoading(true);
-      await persistencePromise;
-      const storedTeachers = await db.getTeachers();
-      setTeachers(storedTeachers);
-      setIsLoading(false);
-    }
-    loadTeachers();
+    const fetchTeachers = async () => {
+      const teacherData = await db.getTeachers();
+      setTeachers(teacherData);
+    };
+    fetchTeachers();
   }, []);
-  
+
   if (isLoading) {
     return (
         <section id="teachers" className="py-16 md:py-24 bg-secondary">

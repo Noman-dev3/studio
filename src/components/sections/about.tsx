@@ -4,23 +4,19 @@ import * as React from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
-import { db, SiteSettings, Feature } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, Feature, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
 export function About() {
-  const [settings, setSettings] = React.useState<Partial<SiteSettings>>({});
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
+  const isLoading = !settings;
 
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const siteSettings = await db.getSettings();
-      setSettings(siteSettings);
-      setIsLoading(false);
-    }
-    loadData();
+    const fetchSettings = async () => {
+        const settingsData = await db.getSettings();
+        setSettings(settingsData);
+    };
+    fetchSettings();
   }, []);
 
   return (

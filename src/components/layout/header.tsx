@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { SmartSearch } from '@/components/smart-search';
 import { cn } from '@/lib/utils';
+import type { SiteSettings } from '@/lib/db';
+import { db } from '@/lib/db';
 
 const navLinks = [
   { href: '/', label: 'Home' },
@@ -22,10 +24,17 @@ const navLinks = [
 ];
 
 export function Header() {
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
   const [isScrolled, setIsScrolled] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   React.useEffect(() => {
+    const fetchSettings = async () => {
+      const settingsData = await db.getSettings();
+      setSettings(settingsData);
+    };
+    fetchSettings();
+
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -41,7 +50,7 @@ export function Header() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-20 items-center justify-between">
           <Link href="/" className="flex items-center">
-            <PiissLogo className="h-8 w-auto" />
+            <PiissLogo className="h-8 w-auto" schoolName={settings?.schoolName} />
           </Link>
 
           <nav className="hidden md:flex items-center space-x-8">
@@ -64,7 +73,7 @@ export function Header() {
               <SheetContent side="left" className="p-0">
                 <SheetHeader className="flex flex-row items-center justify-between p-4 border-b">
                     <Link href="/" onClick={() => setMobileMenuOpen(false)}>
-                        <PiissLogo className="h-8 w-auto" />
+                        <PiissLogo className="h-8 w-auto" schoolName={settings?.schoolName} />
                     </Link>
                     <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                     <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)}>

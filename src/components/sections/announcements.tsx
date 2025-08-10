@@ -2,26 +2,23 @@
 'use client';
 import * as React from 'react';
 import { Megaphone } from 'lucide-react';
-import { db, Announcement } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, db } from '@/lib/db';
 
 export function Announcements() {
-  const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
 
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const settings = await db.getSettings();
-      setAnnouncements(settings.announcements || []);
-      setIsLoading(false);
-    }
-    loadData();
+    const fetchSettings = async () => {
+      const settingsData = await db.getSettings();
+      setSettings(settingsData);
+    };
+    fetchSettings();
   }, []);
 
-  if (isLoading || announcements.length === 0) {
-    return null; // Don't render if loading or no announcements
+  const announcements = settings?.announcements || [];
+  
+  if (announcements.length === 0) {
+    return null; // Don't render if no announcements
   }
 
   const fullText = announcements.map(item => item.text).join(' ••• ');

@@ -2,25 +2,20 @@
 'use client';
 import * as React from 'react';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
-import { db, GalleryImage } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { GalleryImage, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
 export function Gallery() {
-  const [images, setImages] = React.useState<GalleryImage[]>([]);
-  const [isLoading, setIsLoading] = React.useState(true);
+    const [images, setImages] = React.useState<GalleryImage[] | null>(null);
+    const isLoading = !images;
 
-  React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const settings = await db.getSettings();
-      setImages(settings.images.gallery || []);
-      setIsLoading(false);
-    }
-    loadData();
-  }, []);
+    React.useEffect(() => {
+        const fetchImages = async () => {
+            const settings = await db.getSettings();
+            setImages(settings.images?.gallery || []);
+        };
+        fetchImages();
+    }, []);
 
   return (
     <section id="gallery" className="py-16 md:py-24 bg-background">

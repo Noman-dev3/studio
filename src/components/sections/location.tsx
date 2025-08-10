@@ -5,23 +5,19 @@ import { Card } from '@/components/ui/card';
 import { MapPin, Phone, Mail } from 'lucide-react';
 import * as React from 'react';
 import Image from 'next/image';
-import { db } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
 export function Location() {
-  const [settings, setSettings] = React.useState<any>(null);
-  const [isLoading, setIsLoading] = React.useState(true);
-
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
+  const isLoading = !settings;
+  
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const siteSettings = await db.getSettings();
-      setSettings(siteSettings);
-      setIsLoading(false);
-    }
-    loadData();
+    const fetchSettings = async () => {
+      const settingsData = await db.getSettings();
+      setSettings(settingsData);
+    };
+    fetchSettings();
   }, []);
 
   return (
@@ -37,7 +33,7 @@ export function Location() {
         <Card className="overflow-hidden shadow-xl">
           <div className="grid md:grid-cols-2">
             <div className="md:col-span-1 h-96 md:h-full w-full bg-muted flex items-center justify-center">
-                 {isLoading || !settings ? <Skeleton className="w-full h-full" /> : 
+                 {isLoading ? <Skeleton className="w-full h-full" /> : 
                     <Image
                       src={settings.images?.location || "https://placehold.co/600x500.png"}
                       alt="School location placeholder"
@@ -50,7 +46,7 @@ export function Location() {
             </div>
             <div className="p-8 bg-card flex flex-col justify-center">
               <h3 className="text-2xl font-bold text-primary mb-6">Find Us Here</h3>
-              {isLoading || !settings ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   <Skeleton className="h-6 w-3/4" />
                   <Skeleton className="h-6 w-1/2" />

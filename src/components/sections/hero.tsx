@@ -5,25 +5,20 @@ import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
-import { db } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
 export function Hero() {
-  const [title, setTitle] = React.useState('');
-  const [subtitle, setSubtitle] = React.useState('');
-  const [heroImage, setHeroImage] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(true);
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
+  const isLoading = !settings;
+  const title = settings?.heroTitle;
+  const subtitle = settings?.heroSubtitle;
+  const heroImage = settings?.images?.hero;
 
   React.useEffect(() => {
     const fetchSettings = async () => {
-      setIsLoading(true);
-      await persistencePromise;
-      const settings = await db.getSettings();
-      setTitle(settings.heroTitle);
-      setSubtitle(settings.heroSubtitle);
-      setHeroImage(settings.images.hero);
-      setIsLoading(false);
+        const settingsData = await db.getSettings();
+        setSettings(settingsData);
     };
     fetchSettings();
   }, []);

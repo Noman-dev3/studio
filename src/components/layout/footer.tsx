@@ -5,23 +5,19 @@ import * as React from 'react';
 import { PiissLogo } from "@/components/icons/piiss-logo";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
-import { db, SiteSettings } from '@/lib/db';
-import { persistencePromise } from '@/lib/firebase';
+import { SiteSettings, db } from '@/lib/db';
 import { Skeleton } from '../ui/skeleton';
 
 export function Footer() {
-  const [settings, setSettings] = React.useState<Partial<SiteSettings>>({});
-  const [isLoading, setIsLoading] = React.useState(true);
-
+  const [settings, setSettings] = React.useState<Partial<SiteSettings> | null>(null);
+  const isLoading = !settings;
+  
   React.useEffect(() => {
-    async function loadData() {
-      setIsLoading(true);
-      await persistencePromise;
-      const siteSettings = await db.getSettings();
-      setSettings(siteSettings);
-      setIsLoading(false);
-    }
-    loadData();
+    const fetchSettings = async () => {
+      const settingsData = await db.getSettings();
+      setSettings(settingsData);
+    };
+    fetchSettings();
   }, []);
 
   return (
@@ -29,7 +25,7 @@ export function Footer() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-4">
-            <PiissLogo className="h-8 w-auto" />
+            <PiissLogo className="h-8 w-auto" schoolName={settings?.schoolName}/>
             <p className="text-sm">
               Fostering excellence in education and character within a nurturing Islamic environment.
             </p>
@@ -76,7 +72,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-8 pt-8 border-t border-border text-center text-sm">
-          <p>&copy; {new Date().getFullYear()} {settings.schoolName || "Pakistan Islamic International School System"}. All Rights Reserved.</p>
+          <p>&copy; {new Date().getFullYear()} {settings?.schoolName || "Pakistan Islamic International School System"}. All Rights Reserved.</p>
         </div>
       </div>
     </footer>
