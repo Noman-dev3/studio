@@ -60,7 +60,7 @@ export async function POST(req: Request) {
   }
 
   const mailOptions = {
-    from: `"${settings.schoolName}" <${process.env.EMAIL_FROM}>`,
+    from: process.env.EMAIL_FROM,
     to: recipientEmail,
     replyTo: type === 'contact' ? data.email : data.parentEmail,
     subject: subject,
