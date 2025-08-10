@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, XCircle, FileSpreadsheet, User, Hash, School } from 'lucide-react';
+import { Loader2, Search, XCircle, FileSpreadsheet, User, Hash, School, Calendar as CalendarIcon } from 'lucide-react';
 import { checkResult } from '@/app/actions';
 import { StudentResult } from '@/lib/db';
 import { Badge } from '@/components/ui/badge';
@@ -141,8 +141,8 @@ export default function ResultsPage() {
                                 )}
                             />
                         </div>
-                        <Button type="submit" className="w-full" disabled={isLoading}>
-                            {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Search className="mr-2"/>}
+                        <Button type="submit" className="w-full" disabled={isLoading || form.formState.isSubmitting}>
+                            {(isLoading || form.formState.isSubmitting) ? <Loader2 className="mr-2 animate-spin" /> : <Search className="mr-2"/>}
                             Check Result
                         </Button>
                         </form>
@@ -187,7 +187,7 @@ export default function ResultsPage() {
                             </div>
                        </div>
                        <div className="flex items-center gap-2">
-                            <Calendar className="h-5 w-5 text-primary"/>
+                            <CalendarIcon className="h-5 w-5 text-primary"/>
                             <div>
                                 <p className="font-semibold">Session</p>
                                 <p className="text-muted-foreground">{result.session}</p>

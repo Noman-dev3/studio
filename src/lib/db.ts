@@ -139,37 +139,45 @@ export const db = {
   },
   getResult: async (query: { rollNumber?: string; name?: string; className?: string }): Promise<StudentResult | null> => {
       const results = await db.getResults();
-      let result: StudentResult | undefined;
+      let foundResult: StudentResult | undefined;
+      
+      const cleanRollNumber = query.rollNumber?.trim().toLowerCase();
+      const cleanName = query.name?.trim().toLowerCase();
+      const cleanClassName = query.className?.trim().toLowerCase();
 
-      if (query.rollNumber) {
-          const cleanRollNumber = query.rollNumber.trim().toLowerCase();
-          result = results.find(r => r.roll_number.toLowerCase() === cleanRollNumber);
-      } else if (query.name && query.className) {
-           const cleanName = query.name.trim().toLowerCase();
-           const cleanClassName = query.className.trim().toLowerCase();
-           result = results.find(r => 
+      // First, prioritize search by roll number if provided
+      if (cleanRollNumber) {
+          foundResult = results.find(r => r.roll_number.trim().toLowerCase() === cleanRollNumber);
+      }
+      
+      // If not found by roll number (or if roll number wasn't provided), search by name and class
+      if (!foundResult && cleanName && cleanClassName) {
+          foundResult = results.find(r => 
               r.student_name.trim().toLowerCase() === cleanName &&
               r.class.trim().toLowerCase() === cleanClassName
           );
       }
       
-      return Promise.resolve(result || null);
+      return Promise.resolve(foundResult || null);
   },
   saveResult: async (result: StudentResult): Promise<void> => {
     let results = await db.getResults();
-    const existingIndex = results.findIndex(r => r.roll_number === result.roll_number);
+    const existingIndex = results.findIndex(r => r.roll_number.trim().toLowerCase() === result.roll_number.trim().toLowerCase());
     
     if (existingIndex !== -1) {
+        // Update existing result
         results[existingIndex] = result;
     } else {
+        // Add new result
         results.push(result);
     }
     
     saveToLocalStorage('results', results);
     return Promise.resolve();
   },
-   saveResults: async (results: StudentResult[]): Promise<void> => {
-    saveToLocalStorage('results', results);
+   saveResults: async (resultsToSave: StudentResult[]): Promise<void> => {
+    // This function can be used for bulk uploads in the future, overwriting all results.
+    saveToLocalStorage('results', resultsToSave);
     return Promise.resolve();
   },
 

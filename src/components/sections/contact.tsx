@@ -11,7 +11,6 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { contactFormSchema } from '@/lib/schemas';
-import emailjs from '@emailjs/browser';
 import * as React from 'react';
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
@@ -23,27 +22,34 @@ export function Contact() {
     defaultValues: { name: '', email: '', subject: '', message: '' },
   });
 
-  const onSubmit = (data: ContactFormValues) => {
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID!;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_CONTACT_TEMPLATE_ID!;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY!;
-
-    emailjs.send(serviceId, templateId, data, publicKey)
-      .then(() => {
-        toast({
-          title: 'Success!',
-          description: "Your message has been sent successfully.",
-        });
-        form.reset();
-      })
-      .catch((error) => {
-        console.error('EmailJS Error:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Error',
-          description: 'Something went wrong. Please try again later.',
-        });
+  const onSubmit = async (data: ContactFormValues) => {
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...data, type: 'contact' }),
       });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      toast({
+        title: 'Success!',
+        description: "Your message has been sent successfully.",
+      });
+      form.reset();
+
+    } catch (error) {
+      console.error('Submission Failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Something went wrong. Please try again later.',
+      });
+    }
   };
 
   return (

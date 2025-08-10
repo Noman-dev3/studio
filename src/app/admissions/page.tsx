@@ -19,7 +19,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { admissionFormSchema } from '@/lib/schemas';
-import emailjs from '@emailjs/browser';
 
 type AdmissionFormValues = z.infer<typeof admissionFormSchema>;
 
@@ -37,42 +36,38 @@ export default function AdmissionsPage() {
     }
   });
 
-  const onSubmit = (data: AdmissionFormValues) => {
-    const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID;
-    const templateId = process.env.NEXT_PUBLIC_EMAILJS_ADMISSION_TEMPLATE_ID;
-    const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY;
-
-    if (!serviceId || !templateId || !publicKey || templateId === 'YOUR_ADMISSION_FORM_TEMPLATE_ID_HERE') {
-      toast({
-        variant: 'destructive',
-        title: 'Configuration Error',
-        description: 'Admission form is not configured. Please add Template ID.',
+  const onSubmit = async (data: AdmissionFormValues) => {
+    try {
+      const response = await fetch('/api/contact', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+              ...data,
+              dob: format(data.dob, "PPP"),
+              type: 'admission'
+          }),
       });
-      return;
-    }
-    
-    // Format the data to match the EmailJS template variables
-    const templateParams = {
-        ...data,
-        dob: format(data.dob, "PPP"), // Format date for readability in email
-    };
 
-    emailjs.send(serviceId, templateId, templateParams, publicKey)
-      .then(() => {
-        toast({
+      if (!response.ok) {
+          throw new Error('Network response was not ok');
+      }
+
+      toast({
           title: 'Application Submitted!',
           description: "We've received your application and will be in touch soon.",
-        });
-        form.reset();
-      })
-      .catch((error) => {
-          console.error('EmailJS Error:', error);
-          toast({
-              variant: "destructive",
-              title: "Submission Failed",
-              description: "An unexpected error occurred. Please try again later.",
-          });
       });
+      form.reset();
+
+    } catch (error) {
+        console.error('Submission Failed:', error);
+        toast({
+            variant: "destructive",
+            title: "Submission Failed",
+            description: "An unexpected error occurred. Please try again later.",
+        });
+    }
   };
 
   return (
