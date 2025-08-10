@@ -51,9 +51,9 @@ export default function ResultsPage() {
     }
     const filtered = allResults.filter(
       (result) =>
-        result.student_name.toLowerCase().includes(query) ||
-        result.roll_number.toLowerCase().includes(query) ||
-        result.class.toLowerCase().includes(query)
+        (result.student_name && result.student_name.toLowerCase().includes(query)) ||
+        (result.roll_number && result.roll_number.toLowerCase().includes(query)) ||
+        (result.class && result.class.toLowerCase().includes(query))
     );
     setFilteredResults(filtered);
   }, [searchQuery, allResults]);
