@@ -2,9 +2,25 @@
 'use server';
 
 import { z } from 'zod';
+import { headers } from 'next/headers';
 import { smartSearch, type SmartSearchInput } from '@/ai/flows/smart-search';
-import { db, type Student } from '@/lib/db';
+import { db, type Student, SiteSettings } from '@/lib/db';
 import { contactFormSchema } from '@/lib/schemas';
+
+// Helper to check for admin authentication
+async function isAdminAuthenticated() {
+  // In a real app, you'd use a proper auth system (e.g., Firebase Auth, NextAuth).
+  // For this prototype, we'll check a header or a similar mechanism.
+  // This is a simplified check and should be replaced with a robust solution.
+  const settings = await db.getSettings();
+  const adminUsername = headers().get('X-Admin-Username');
+  const adminPassword = headers().get('X-Admin-Password');
+  
+  // NOTE: This is NOT a secure way to handle authentication.
+  // It's a placeholder for the prototype.
+  return adminUsername === settings.adminUsername && adminPassword === settings.adminPassword;
+}
+
 
 export async function handleSmartSearch(input: SmartSearchInput) {
   try {
@@ -18,6 +34,9 @@ export async function handleSmartSearch(input: SmartSearchInput) {
 
 // Action to update admission status
 export async function updateAdmissionStatus(admissionId: string, status: 'Approved' | 'Rejected') {
+  if (!await isAdminAuthenticated()) {
+    return { success: false, message: 'Authentication failed. Insufficient permissions.' };
+  }
   try {
     const admissions = await db.getAdmissions();
     const admissionIndex = admissions.findIndex(a => a.id === admissionId);
@@ -38,6 +57,9 @@ export async function updateAdmissionStatus(admissionId: string, status: 'Approv
 
 // Action to delete a student
 export async function deleteStudent(rollNumber: string) {
+    if (!await isAdminAuthenticated()) {
+        return { success: false, message: 'Authentication failed. Insufficient permissions.' };
+    }
     try {
         await db.deleteStudent(rollNumber);
         return { success: true, message: 'Student deleted successfully.' };
@@ -49,6 +71,9 @@ export async function deleteStudent(rollNumber: string) {
 
 // Action to delete a teacher
 export async function deleteTeacher(teacherId: string) {
+    if (!await isAdminAuthenticated()) {
+        return { success: false, message: 'Authentication failed. Insufficient permissions.' };
+    }
     try {
         await db.deleteTeacher(teacherId);
         return { success: true, message: 'Teacher deleted successfully.' };
@@ -69,6 +94,9 @@ const studentFormSchema = z.object({
 });
 
 export async function updateStudent(data: Student) {
+    if (!await isAdminAuthenticated()) {
+        return { success: false, message: 'Authentication failed. Insufficient permissions.' };
+    }
     const parsed = studentFormSchema.safeParse(data);
     if (!parsed.success) {
         return { success: false, message: 'Invalid student data.' };
@@ -87,5 +115,4 @@ export async function updateStudent(data: Student) {
         return { success: false, message: 'Failed to update student.' };
     }
 }
-
     
