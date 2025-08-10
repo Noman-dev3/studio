@@ -296,7 +296,7 @@ export default function SettingsPage() {
                         <div key={field} className="space-y-2">
                            <Label htmlFor={`${field}-image`} className="capitalize">{field} Image</Label>
                             <Image 
-                                src={(settings.images as any)[field]} 
+                                src={(settings.images as any)[field] || "https://placehold.co/300x200.png"} 
                                 alt={`${field} preview`} 
                                 width={300} height={200} 
                                 className="rounded-md border aspect-video object-cover"
@@ -357,7 +357,7 @@ export default function SettingsPage() {
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {settings.images.gallery.map(image => (
                     <div key={image.id} className="border rounded-lg p-3 space-y-2">
-                        <Image src={image.src} alt={image.alt} width={200} height={150} className="w-full object-cover aspect-video rounded-md" />
+                        <Image src={image.src || "https://placehold.co/200x150.png"} alt={image.alt} width={200} height={150} className="w-full object-cover aspect-video rounded-md" />
                         <div className="space-y-1">
                           <Label htmlFor={`gallery-src-${image.id}`} className="text-xs">Image URL or Data URL</Label>
                           <Input id={`gallery-src-${image.id}`} value={image.src} onChange={e => handleGalleryImageChange(image.id, 'src', e.target.value)} />

@@ -146,8 +146,8 @@ export default function TeacherManagementPage() {
                     </TableCell>
                 </TableRow>
                 ) : (
-                teachers.map((teacher) => (
-                <TableRow key={teacher.Teacher_ID}>
+                teachers.map((teacher, index) => (
+                <TableRow key={`${teacher.Teacher_ID}-${index}`}>
                     <TableCell>
                       <Image 
                         src={teacher.Photo_Path || `https://placehold.co/40x40.png?text=${teacher.Name.charAt(0)}`} 
