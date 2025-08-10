@@ -92,7 +92,7 @@ const checkResultSchema = z.object({
     rollNumber: z.string().optional(),
     name: z.string().optional(),
     className: z.string().optional(),
-}).refine(data => !!data.rollNumber || (!!data.name && !!data.className), {
+}).refine(data => !!data.rollNumber?.trim() || (!!data.name?.trim() && !!data.className?.trim()), {
     message: "Either Roll Number or both Name and Class are required.",
     path: ["rollNumber"],
 });

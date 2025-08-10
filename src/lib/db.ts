@@ -142,11 +142,14 @@ export const db = {
       let result: StudentResult | undefined;
 
       if (query.rollNumber) {
-          result = results.find(r => r.roll_number.toLowerCase() === query.rollNumber!.toLowerCase());
+          const cleanRollNumber = query.rollNumber.trim().toLowerCase();
+          result = results.find(r => r.roll_number.toLowerCase() === cleanRollNumber);
       } else if (query.name && query.className) {
-          result = results.find(r => 
-              r.student_name.toLowerCase() === query.name!.toLowerCase() &&
-              r.class.toLowerCase() === query.className!.toLowerCase()
+           const cleanName = query.name.trim().toLowerCase();
+           const cleanClassName = query.className.trim().toLowerCase();
+           result = results.find(r => 
+              r.student_name.trim().toLowerCase() === cleanName &&
+              r.class.trim().toLowerCase() === cleanClassName
           );
       }
       

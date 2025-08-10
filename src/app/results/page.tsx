@@ -23,7 +23,7 @@ const resultCheckSchema = z.object({
   rollNumber: z.string().optional(),
   name: z.string().optional(),
   className: z.string().optional(),
-}).refine(data => !!data.rollNumber || (!!data.name && !!data.className), {
+}).refine(data => !!data.rollNumber?.trim() || (!!data.name?.trim() && !!data.className?.trim()), {
     message: "Please enter either a Roll Number, or both Name and Class.",
     path: ["rollNumber"],
 });
@@ -91,15 +91,22 @@ export default function ResultsPage() {
                             name="rollNumber"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Roll Number (optional)</FormLabel>
+                                <FormLabel>Roll Number</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., PIISS-101" {...field} />
+                                    <div className="relative">
+                                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+                                        <Input placeholder="e.g., PIISS-101" {...field} className="pl-10"/>
+                                    </div>
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
                             )}
                         />
-                        <div className="text-center text-sm text-muted-foreground font-semibold">OR</div>
+                        <div className="flex items-center gap-2">
+                           <div className="flex-grow border-t border-muted"></div>
+                           <span className="text-sm text-muted-foreground font-semibold">OR</span>
+                           <div className="flex-grow border-t border-muted"></div>
+                        </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
@@ -108,7 +115,10 @@ export default function ResultsPage() {
                                 <FormItem>
                                     <FormLabel>Student Name</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., Ali Khan" {...field} />
+                                        <div className="relative">
+                                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+                                            <Input placeholder="e.g., Ali Khan" {...field} className="pl-10" />
+                                        </div>
                                     </FormControl>
                                      <FormMessage />
                                 </FormItem>
@@ -121,7 +131,10 @@ export default function ResultsPage() {
                                 <FormItem>
                                     <FormLabel>Class</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="e.g., Grade 10" {...field} />
+                                       <div className="relative">
+                                            <School className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"/>
+                                            <Input placeholder="e.g., Grade 10" {...field} className="pl-10" />
+                                        </div>
                                     </FormControl>
                                      <FormMessage />
                                 </FormItem>
@@ -174,7 +187,7 @@ export default function ResultsPage() {
                             </div>
                        </div>
                        <div className="flex items-center gap-2">
-                            <User className="h-5 w-5 text-primary"/>
+                            <Calendar className="h-5 w-5 text-primary"/>
                             <div>
                                 <p className="font-semibold">Session</p>
                                 <p className="text-muted-foreground">{result.session}</p>
