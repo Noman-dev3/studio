@@ -13,10 +13,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, XCircle, FileSpreadsheet } from 'lucide-react';
+import { Loader2, Search, XCircle, FileSpreadsheet, User, Hash } from 'lucide-react';
 import { checkResult } from '@/app/actions';
 import { StudentResult } from '@/lib/db';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
 const resultCheckSchema = z.object({
   rollNumber: z.string().min(1, { message: 'Roll number is required.' }),
@@ -113,35 +114,74 @@ export default function ResultsPage() {
                 <CardHeader className="text-center bg-primary text-primary-foreground rounded-t-lg p-6">
                   <FileSpreadsheet className="h-12 w-12 mx-auto mb-2"/>
                   <CardTitle className="text-3xl">Student Report Card</CardTitle>
-                  <CardDescription className="text-primary-foreground/80 text-lg">Roll Number: {result.studentRollNumber}</CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-4 mb-8 text-sm">
+                       <div className="flex items-center gap-2">
+                            <User className="h-5 w-5 text-primary"/>
+                            <div>
+                                <p className="font-semibold">Student Name</p>
+                                <p className="text-muted-foreground">{result.student_name}</p>
+                            </div>
+                       </div>
+                       <div className="flex items-center gap-2">
+                            <Hash className="h-5 w-5 text-primary"/>
+                             <div>
+                                <p className="font-semibold">Roll Number</p>
+                                <p className="text-muted-foreground">{result.roll_number}</p>
+                            </div>
+                       </div>
+                       <div className="flex items-center gap-2">
+                            <User className="h-5 w-5 text-primary"/>
+                             <div>
+                                <p className="font-semibold">Class</p>
+                                <p className="text-muted-foreground">{result.class}</p>
+                            </div>
+                       </div>
+                       <div className="flex items-center gap-2">
+                            <User className="h-5 w-5 text-primary"/>
+                            <div>
+                                <p className="font-semibold">Session</p>
+                                <p className="text-muted-foreground">{result.session}</p>
+                            </div>
+                       </div>
+                    </div>
+
+                    <Separator className="my-6"/>
+
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="text-lg">Subject</TableHead>
-                                <TableHead className="text-right text-lg">Marks (out of 100)</TableHead>
+                                <TableHead className="text-base">Subject</TableHead>
+                                <TableHead className="text-right text-base">Marks Obtained</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {result.subjects.map(subject => (
-                                <TableRow key={subject.id} className="text-base">
-                                    <TableCell className="font-medium">{subject.name}</TableCell>
-                                    <TableCell className="text-right">{subject.marks}</TableCell>
+                            {Object.entries(result.subjects).map(([name, marks]) => (
+                                <TableRow key={name} className="text-base">
+                                    <TableCell className="font-medium">{name}</TableCell>
+                                    <TableCell className="text-right">{String(marks)}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
-                    <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-6 text-center">
+
+                     <Separator className="my-6"/>
+
+                    <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
                         <div className="bg-secondary p-4 rounded-lg">
                             <p className="text-sm font-medium text-muted-foreground">Total Marks</p>
-                            <p className="text-2xl font-bold text-primary">{result.totalMarks} / {result.subjects.length * 100}</p>
+                            <p className="text-2xl font-bold text-primary">{result.total_marks}</p>
+                        </div>
+                         <div className="bg-secondary p-4 rounded-lg">
+                            <p className="text-sm font-medium text-muted-foreground">Max Marks</p>
+                            <p className="text-2xl font-bold text-primary">{result.max_marks}</p>
                         </div>
                         <div className="bg-secondary p-4 rounded-lg">
                             <p className="text-sm font-medium text-muted-foreground">Percentage</p>
                             <p className="text-2xl font-bold text-primary">{result.percentage}%</p>
                         </div>
-                        <div className="bg-secondary p-4 rounded-lg col-span-2 md:col-span-1">
+                        <div className="bg-secondary p-4 rounded-lg">
                             <p className="text-sm font-medium text-muted-foreground">Grade</p>
                             <Badge className={`text-2xl font-bold text-white px-4 py-1 ${getGradeColor(result.grade)}`}>{result.grade}</Badge>
                         </div>

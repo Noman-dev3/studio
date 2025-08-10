@@ -10,7 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
-import { db, Topper } from '@/lib/db';
+import { db, Topper, StudentResult } from '@/lib/db';
 import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
@@ -51,7 +51,7 @@ export default function SettingsPage() {
     }
   };
 
-  const handleFileUpload = (file: File | undefined, type: 'students' | 'teachers' | 'results') => {
+  const handleFileUpload = (file: File | undefined, type: 'students' | 'teachers') => {
     if (!file) {
         toast({ variant: "destructive", title: "Upload Failed", description: "Please select a file to upload." });
         return;
@@ -69,17 +69,6 @@ export default function SettingsPage() {
                 } else if (type === 'teachers') {
                     await db.saveTeachers(results.data as any);
                     toast({ title: "Success", description: "Teachers data has been uploaded." });
-                } else if (type === 'results') {
-                    // The result CSV needs to be transformed before saving
-                    const transformedResults = (results.data as any[]).map(row => ({
-                      studentRollNumber: row.studentRollNumber,
-                      subjects: JSON.parse(row.subjects), // Assuming subjects are a JSON string
-                      totalMarks: row.totalMarks,
-                      percentage: row.percentage,
-                      grade: row.grade,
-                    }));
-                    await db.saveResults(transformedResults);
-                    toast({ title: "Success", description: "Results data has been uploaded." });
                 }
             } catch (error) {
                  toast({ variant: "destructive", title: "Save Failed", description: `There was an error saving the data. Please check the CSV format. Error: ${error}` });
@@ -89,6 +78,37 @@ export default function SettingsPage() {
             toast({ variant: "destructive", title: "Parsing Error", description: `Failed to parse CSV file: ${error.message}` });
         }
     });
+  };
+
+  const handleResultJsonUpload = (file: File | undefined) => {
+      if (!file) {
+          toast({ variant: "destructive", title: "Upload Failed", description: "Please select a JSON file." });
+          return;
+      }
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+          try {
+              const jsonContent = event.target?.result;
+              if (typeof jsonContent !== 'string') throw new Error("File content is not valid.");
+              
+              const resultData: StudentResult = JSON.parse(jsonContent);
+
+              // Basic validation to match the expected structure
+              if (!resultData.roll_number || !resultData.subjects) {
+                throw new Error("Invalid JSON format. Missing 'roll_number' or 'subjects'.");
+              }
+              
+              await db.saveResult(resultData);
+              toast({ title: "Success", description: `Result for roll number ${resultData.roll_number} has been uploaded and saved.` });
+
+          } catch (error: any) {
+              toast({ variant: "destructive", title: "JSON Error", description: `Failed to parse or save JSON file: ${error.message}` });
+          }
+      };
+      reader.onerror = () => {
+        toast({ variant: "destructive", title: "File Read Error", description: "Could not read the selected file." });
+      };
+      reader.readAsText(file);
   };
 
   const handleAddTopper = () => {
@@ -126,7 +146,7 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Data Management</CardTitle>
-                    <CardDescription>Upload CSV files to populate site data. This will overwrite any existing data.</CardDescription>
+                    <CardDescription>Upload CSV files for students/teachers and JSON files for results. This will overwrite existing data where applicable.</CardDescription>
                 </CardHeader>
                 <CardContent className="grid md:grid-cols-3 gap-6">
                     <div className="space-y-2">
@@ -168,22 +188,22 @@ export default function SettingsPage() {
                         </p>
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="results-csv">Results Data</Label>
+                        <Label htmlFor="results-json">Results Data (JSON)</Label>
                          <div className="flex items-center gap-2">
                              <Input 
-                                id="results-csv" 
+                                id="results-json" 
                                 type="file" 
-                                accept=".csv" 
+                                accept=".json" 
                                 ref={resultsFileRef}
-                                onChange={(e) => handleFileUpload(e.target.files?.[0], 'results')}
+                                onChange={(e) => handleResultJsonUpload(e.target.files?.[0])}
                                 className="hidden"
                             />
                              <Button onClick={() => resultsFileRef.current?.click()} className="w-full">
-                                <Upload className="mr-2 h-4 w-4" /> Upload CSV
+                                <Upload className="mr-2 h-4 w-4" /> Upload JSON
                             </Button>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                           Columns: studentRollNumber, subjects (as JSON string), totalMarks, percentage, grade
+                           Upload a single JSON file per student result.
                         </p>
                     </div>
                 </CardContent>

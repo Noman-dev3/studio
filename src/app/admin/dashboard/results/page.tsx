@@ -73,8 +73,13 @@ export default function ResultManagementPage() {
 
   const handleManageReportCard = (student: Student) => {
     setSelectedStudent(student);
-    const studentResult = results.find(r => r.studentRollNumber === student.Roll_Number);
-    setCurrentSubjects(studentResult?.subjects || []);
+    const studentResult = results.find(r => r.roll_number === student.Roll_Number);
+    const subjectsArray = studentResult?.subjects ? Object.entries(studentResult.subjects).map(([name, marks], index) => ({
+        id: `${student.Roll_Number}-${name}-${index}`,
+        name,
+        marks: Number(marks)
+    })) : [];
+    setCurrentSubjects(subjectsArray);
     setIsModalOpen(true);
   };
 
@@ -107,17 +112,32 @@ export default function ResultManagementPage() {
     if (!selectedStudent) return;
     setIsSaving(true);
     
+    const subjectsObject = currentSubjects.reduce((acc, subject) => {
+        if(subject.name) {
+            acc[subject.name] = subject.marks;
+        }
+        return acc;
+    }, {} as {[key: string]: number});
+
     const totalMarks = currentSubjects.reduce((acc, subject) => acc + subject.marks, 0);
     const maxMarks = currentSubjects.length * 100; // Assuming each subject is out of 100
     const percentage = maxMarks > 0 ? (totalMarks / maxMarks) * 100 : 0;
     const grade = getGrade(percentage);
+    
+    const existingResult = results.find(r => r.roll_number === selectedStudent.Roll_Number);
 
     const newResult: StudentResult = {
-      studentRollNumber: selectedStudent.Roll_Number,
-      subjects: currentSubjects,
-      totalMarks,
+      ...(existingResult || {}),
+      student_name: selectedStudent.Name,
+      roll_number: selectedStudent.Roll_Number,
+      class: selectedStudent.Class,
+      session: existingResult?.session || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+      subjects: subjectsObject,
+      total_marks: totalMarks,
+      max_marks: maxMarks,
       percentage: parseFloat(percentage.toFixed(2)),
-      grade,
+      grade: grade,
+      date_created: existingResult?.date_created || new Date().toISOString(),
     };
 
     try {
@@ -133,7 +153,7 @@ export default function ResultManagementPage() {
   };
 
   const getResultForStudent = (rollNumber: string) => {
-    return results.find(r => r.studentRollNumber === rollNumber);
+    return results.find(r => r.roll_number === rollNumber);
   };
 
   return (
@@ -143,7 +163,7 @@ export default function ResultManagementPage() {
             <div className="flex items-center justify-between">
             <div>
                 <CardTitle>Results Management</CardTitle>
-                <CardDescription>Create and manage student report cards.</CardDescription>
+                <CardDescription>Create and manage student report cards. You can also bulk-upload JSON files in settings.</CardDescription>
             </div>
             </div>
         </CardHeader>
@@ -191,7 +211,7 @@ export default function ResultManagementPage() {
                             <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleManageReportCard(student)}>
-                                <BookOpen className="mr-2 h-4 w-4" /> Manage Report Card
+                                <BookOpen className="mr-2 h-4 w-4" /> {result ? 'Edit' : 'Create'} Report Card
                             </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>

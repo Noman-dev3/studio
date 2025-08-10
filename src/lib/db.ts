@@ -30,6 +30,7 @@ export interface Topper {
     marks: string;
 }
 
+// Kept for manual result creation form.
 export interface Subject {
   id: string;
   name: string;
@@ -37,12 +38,16 @@ export interface Subject {
 }
 
 export interface StudentResult {
-  studentRollNumber: string;
-  subjects: Subject[];
-  totalMarks: number;
-  percentage: number;
-  grade: string;
-  position?: '1st' | '2nd' | '3rd' | 'No Position';
+    student_name: string;
+    roll_number: string;
+    class: string;
+    session: string;
+    subjects: { [key: string]: number };
+    total_marks: number;
+    max_marks: number;
+    percentage: number;
+    grade: string;
+    date_created: string;
 }
 
 export interface Admission {
@@ -134,21 +139,17 @@ export const db = {
   },
   getResultByRollNumber: async (rollNumber: string): Promise<StudentResult | null> => {
       const results = await db.getResults();
-      const result = results.find(r => r.studentRollNumber === rollNumber) || null;
+      const result = results.find(r => r.roll_number === rollNumber) || null;
       return Promise.resolve(result);
   },
   saveResult: async (result: StudentResult): Promise<void> => {
     let results = await db.getResults();
-    const existingIndex = results.findIndex(r => r.studentRollNumber === result.studentRollNumber);
+    const existingIndex = results.findIndex(r => r.roll_number === result.roll_number);
     
-    // Simplified: remove position logic
-    const newResultData = { ...result };
-    delete newResultData.position;
-
     if (existingIndex !== -1) {
-        results[existingIndex] = newResultData;
+        results[existingIndex] = result;
     } else {
-        results.push(newResultData);
+        results.push(result);
     }
     
     saveToLocalStorage('results', results);
