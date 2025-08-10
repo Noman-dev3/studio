@@ -1,6 +1,7 @@
+
 // src/lib/firebase.ts
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
-import { getFirestore, enableMultiTabIndexedDbPersistence, initializeFirestore, Firestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
+import { getDatabase, Database } from 'firebase/database';
 
 const firebaseConfig = {
   projectId: "piiss-bfh06",
@@ -8,26 +9,19 @@ const firebaseConfig = {
   storageBucket: "piiss-bfh06.firebasestorage.app",
   apiKey: "AIzaSyBb6b4afUUGdTdzPAfQCVKhiESy-pnBpeE",
   authDomain: "piiss-bfh06.firebaseapp.com",
-  messagingSenderId: "296152062569"
+  messagingSenderId: "296152062569",
+  databaseURL: "https://piiss-bfh06-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
 const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore but don't export it directly
-const db: Firestore = initializeFirestore(app, {
-  cacheSizeBytes: CACHE_SIZE_UNLIMITED,
-});
+// Initialize Realtime Database
+const rtdb: Database = getDatabase(app);
 
-// Create a promise that resolves when persistence is enabled
-const persistencePromise = enableMultiTabIndexedDbPersistence(db).catch((err) => {
-  if (err.code == 'failed-precondition') {
-    console.warn('Firebase persistence failed: multiple tabs open.');
-  } else if (err.code == 'unimplemented') {
-    console.warn('Firebase persistence failed: browser does not support it.');
-  }
-  return err; // Resolve with the error if it fails, so the app doesn't hang
-});
+// For client-side usage, we don't need a special persistence promise
+// like we did for Firestore's multi-tab support.
+const persistencePromise = Promise.resolve();
 
 // Export the app, the db instance, and the promise
-export { db, app, persistencePromise };
+export { rtdb, app, persistencePromise };

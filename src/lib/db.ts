@@ -1,18 +1,7 @@
 
 'use client';
-import { db as firestoreDb } from './firebase'; // renamed to avoid conflict
-import {
-  collection,
-  doc,
-  getDoc,
-  setDoc,
-  getDocs,
-  writeBatch,
-  deleteDoc,
-  query,
-  where,
-  limit,
-} from 'firebase/firestore';
+import { rtdb } from './firebase'; // Use Realtime Database
+import { ref, get, set, remove, child } from 'firebase/database';
 
 
 export interface Student {
@@ -58,6 +47,9 @@ export interface StudentResult {
     percentage: number;
     grade: string;
     date_created: string;
+    // For easier querying in RTDB
+    student_name_lowercase?: string;
+    class_lowercase?: string;
 }
 
 export interface Admission {
@@ -188,62 +180,59 @@ export const defaultSettings: SiteSettings = {
     }
 };
 
-const collections = {
-  settings: 'settings',
-  students: 'students',
-  teachers: 'teachers',
-  results: 'results',
-  admissions: 'admissions',
+const rootRef = ref(rtdb);
+
+// Helper to convert snapshot object to array
+const snapshotToArray = <T>(snapshotVal: { [key: string]: T } | null): T[] => {
+  if (!snapshotVal) return [];
+  return Object.keys(snapshotVal).map(key => ({ ...snapshotVal[key], id: key }));
 };
 
 const dbService = {
   getSettings: async (): Promise<SiteSettings> => {
-    const docRef = doc(firestoreDb, collections.settings, 'global');
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      // Merge defaults with fetched data to ensure all properties exist
-      return { ...defaultSettings, ...docSnap.data() } as SiteSettings;
+    const settingsRef = child(rootRef, 'settings/global');
+    const snapshot = await get(settingsRef);
+    if (snapshot.exists()) {
+      return { ...defaultSettings, ...snapshot.val() };
     } else {
-      // If no settings exist in Firestore, create them with default values
-      await setDoc(docRef, defaultSettings);
+      await set(settingsRef, defaultSettings);
       return defaultSettings;
     }
   },
   saveSettings: async (settings: SiteSettings): Promise<void> => {
-    const docRef = doc(firestoreDb, collections.settings, 'global');
-    await setDoc(docRef, settings, { merge: true });
+    await set(child(rootRef, 'settings/global'), settings);
   },
 
   getStudents: async (): Promise<Student[]> => {
-    const querySnapshot = await getDocs(collection(firestoreDb, collections.students));
-    return querySnapshot.docs.map(doc => doc.data() as Student);
+    const snapshot = await get(child(rootRef, 'students'));
+    const data = snapshot.val();
+    return data ? Object.values(data) : [];
   },
   saveStudents: async (students: Student[]): Promise<void> => {
-    const batch = writeBatch(firestoreDb);
+    const updates: { [key: string]: Student } = {};
     students.forEach(student => {
-      const docRef = doc(firestoreDb, collections.students, student.Roll_Number);
-      batch.set(docRef, student);
+      updates[`/students/${student.Roll_Number}`] = student;
     });
-    await batch.commit();
+    await set(ref(rtdb), updates);
   },
   deleteStudent: async (rollNumber: string): Promise<void> => {
-    await deleteDoc(doc(firestoreDb, collections.students, rollNumber));
+    await remove(child(rootRef, `students/${rollNumber}`));
   },
 
   getTeachers: async (): Promise<Teacher[]> => {
-    const querySnapshot = await getDocs(collection(firestoreDb, collections.teachers));
-    return querySnapshot.docs.map(doc => doc.data() as Teacher);
+    const snapshot = await get(child(rootRef, 'teachers'));
+    const data = snapshot.val();
+    return data ? Object.values(data) : [];
   },
   saveTeachers: async (teachers: Teacher[]): Promise<void> => {
-    const batch = writeBatch(firestoreDb);
+    const updates: { [key: string]: Teacher } = {};
     teachers.forEach(teacher => {
-      const docRef = doc(firestoreDb, collections.teachers, teacher.Teacher_ID);
-      batch.set(docRef, teacher);
+      updates[`/teachers/${teacher.Teacher_ID}`] = teacher;
     });
-    await batch.commit();
+    await set(ref(rtdb), updates);
   },
   deleteTeacher: async (teacherId: string): Promise<void> => {
-     await deleteDoc(doc(firestoreDb, collections.teachers, teacherId));
+     await remove(child(rootRef, `teachers/${teacherId}`));
   },
 
   getToppers: async (): Promise<Topper[]> => {
@@ -252,61 +241,56 @@ const dbService = {
   },
 
   getResults: async (): Promise<StudentResult[]> => {
-    const querySnapshot = await getDocs(collection(firestoreDb, collections.results));
-    return querySnapshot.docs.map(doc => doc.data() as StudentResult);
+    const snapshot = await get(child(rootRef, 'results'));
+    const data = snapshot.val();
+    return data ? Object.values(data) : [];
   },
   getResult: async (queryData: { rollNumber?: string; name?: string; className?: string }): Promise<StudentResult | null> => {
-    const resultsCol = collection(firestoreDb, collections.results);
     const cleanRollNumber = queryData.rollNumber?.trim().toLowerCase();
     const cleanName = queryData.name?.trim().toLowerCase();
     const cleanClassName = queryData.className?.trim().toLowerCase();
     
+    // In RTDB, complex queries are harder. We'll fetch all and filter.
+    // For performance, this would be optimized with server-side functions or denormalized data.
+    const allResults = await dbService.getResults();
+
     if (cleanRollNumber) {
-      const docRef = doc(firestoreDb, collections.results, cleanRollNumber);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) return docSnap.data() as StudentResult;
+        return allResults.find(r => r.roll_number.toLowerCase() === cleanRollNumber) || null;
     }
     
     if (cleanName && cleanClassName) {
-      const q = query(
-        resultsCol, 
-        where("student_name_lowercase", "==", cleanName), 
-        where("class_lowercase", "==", cleanClassName),
-        limit(1)
-      );
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].data() as StudentResult;
-      }
+       return allResults.find(r => 
+        r.student_name_lowercase === cleanName && 
+        r.class_lowercase === cleanClassName
+       ) || null;
     }
     
     return null;
   },
   saveResult: async (result: StudentResult): Promise<void> => {
-    const docRef = doc(firestoreDb, collections.results, result.roll_number.trim().toLowerCase());
     const resultWithLowercase = {
       ...result,
       student_name_lowercase: result.student_name.toLowerCase(),
       class_lowercase: result.class.toLowerCase()
-    }
-    await setDoc(docRef, resultWithLowercase);
+    };
+    const resultRef = child(rootRef, `results/${result.roll_number.trim().toLowerCase()}`);
+    await set(resultRef, resultWithLowercase);
   },
 
   getAdmissions: async (): Promise<Admission[]> => {
-    const querySnapshot = await getDocs(collection(firestoreDb, collections.admissions));
-    return querySnapshot.docs.map(doc => doc.data() as Admission);
+    const snapshot = await get(child(rootRef, 'admissions'));
+    return snapshotToArray<Admission>(snapshot.val());
   },
   saveAdmission: async (admission: Admission): Promise<void> => {
-    const docRef = doc(firestoreDb, collections.admissions, admission.id);
-    await setDoc(docRef, admission);
+    const admissionRef = child(rootRef, `admissions/${admission.id}`);
+    await set(admissionRef, admission);
   },
   saveAdmissions: async (admissions: Admission[]): Promise<void> => {
-    const batch = writeBatch(firestoreDb);
+    const updates: { [key: string]: Admission } = {};
     admissions.forEach(adm => {
-        const docRef = doc(firestoreDb, collections.admissions, adm.id);
-        batch.set(docRef, adm);
+      updates[`/admissions/${adm.id}`] = adm;
     });
-    await batch.commit();
+    await set(ref(rtdb), updates);
   },
 };
 
