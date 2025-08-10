@@ -44,7 +44,23 @@ export default function SettingsPage() {
                 db.getSettings()
             ]);
             setToppers(savedToppers);
-            setSettings(savedSettings || defaultSettings);
+
+            // Deep merge saved settings with defaults to prevent crashes
+            const mergedSettings = {
+              ...defaultSettings,
+              ...savedSettings,
+              socials: {
+                ...defaultSettings.socials,
+                ...(savedSettings.socials || {}),
+              },
+              images: {
+                ...defaultSettings.images,
+                ...(savedSettings.images || {}),
+                gallery: savedSettings.images?.gallery || defaultSettings.images.gallery,
+              },
+            };
+            setSettings(mergedSettings);
+
         } catch (error) {
             console.error("Failed to fetch settings:", error);
             toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
@@ -333,7 +349,7 @@ export default function SettingsPage() {
                         <div key={field} className="space-y-2">
                            <Label htmlFor={`${field}-image`} className="capitalize">{field} Image</Label>
                             <Image 
-                                src={(settings.images?.[field]) || "https://placehold.co/300x200.png"} 
+                                src={settings.images?.[field] || "https://placehold.co/300x200.png"} 
                                 alt={`${field} preview`} 
                                 width={300} height={200} 
                                 className="rounded-md border aspect-video object-cover"
@@ -386,7 +402,7 @@ export default function SettingsPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {(settings.images?.gallery || []).map(image => (
+                  {(settings.images.gallery || []).map(image => (
                     <div key={image.id} className="border rounded-lg p-3 space-y-2">
                         <Image src={image.src || "https://placehold.co/200x150.png"} alt={image.alt} width={200} height={150} className="w-full object-cover aspect-video rounded-md" />
                         <div className="space-y-1">
@@ -647,5 +663,3 @@ export default function SettingsPage() {
     </AdminLayout>
   );
 }
-
-    
