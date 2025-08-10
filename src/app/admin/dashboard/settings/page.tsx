@@ -17,9 +17,6 @@ import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
 
-// Helper type to get only the keys of SiteSettings that are arrays
-type ArrayKeys<T> = { [K in keyof T]: T[K] extends any[] ? K : never }[keyof T];
-
 export default function SettingsPage() {
   const router = useRouter();
   const { toast } = useToast();
@@ -124,31 +121,84 @@ export default function SettingsPage() {
       handleNestedChange('images', 'gallery', updatedGallery);
   };
 
+  // Specific handlers for each list type
+  const announcementManager = {
+      updateItem: (id: string, field: keyof Announcement, value: any) => {
+        const updatedList = (settings.announcements || []).map(item =>
+          item.id === id ? { ...item, [field]: value } : item
+        );
+        handleSettingsChange('announcements', updatedList);
+      },
+      addItem: (newItem: Omit<Announcement, 'id'>) => {
+        const itemWithId = { ...newItem, id: Date.now().toString() };
+        handleSettingsChange('announcements', [...(settings.announcements || []), itemWithId]);
+      },
+      removeItem: (id: string) => {
+        handleSettingsChange('announcements', (settings.announcements || []).filter(item => item.id !== id));
+      }
+    };
 
-  const handleListItemChange = <T extends { id: string }>(
-    listName: ArrayKeys<SiteSettings>,
-    id: string,
-    field: keyof T,
-    value: any
-  ) => {
-    const list = (settings[listName] as T[] | undefined) || [];
-    const updatedList = list.map(item => item.id === id ? { ...item, [field]: value } : item);
-    handleSettingsChange(listName, updatedList);
-  };
-  
-  const addListItem = <T extends { id: string }>(listName: ArrayKeys<SiteSettings>, newItem: T) => {
-    const list = (settings[listName] as T[] | undefined) || [];
-    handleSettingsChange(listName, [...list, newItem]);
-  };
+    const featureManager = {
+      updateItem: (id: string, field: keyof Feature, value: any) => {
+        const updatedList = (settings.features || []).map(item =>
+          item.id === id ? { ...item, [field]: value } : item
+        );
+        handleSettingsChange('features', updatedList);
+      },
+      addItem: (newItem: Omit<Feature, 'id'>) => {
+        const itemWithId = { ...newItem, id: Date.now().toString() };
+        handleSettingsChange('features', [...(settings.features || []), itemWithId]);
+      },
+      removeItem: (id: string) => {
+        handleSettingsChange('features', (settings.features || []).filter(item => item.id !== id));
+      }
+    };
+    
+    const eventManager = {
+      updateItem: (id: string, field: keyof Event, value: any) => {
+        const updatedList = (settings.events || []).map(item =>
+          item.id === id ? { ...item, [field]: value } : item
+        );
+        handleSettingsChange('events', updatedList);
+      },
+      addItem: (newItem: Omit<Event, 'id'>) => {
+        const itemWithId = { ...newItem, id: Date.now().toString() };
+        handleSettingsChange('events', [...(settings.events || []), itemWithId]);
+      },
+      removeItem: (id: string) => {
+        handleSettingsChange('events', (settings.events || []).filter(item => item.id !== id));
+      }
+    };
 
-  const removeListItem = <T extends { id: string }>(listName: ArrayKeys<SiteSettings>, id: string) => {
-     const list = (settings[listName] as T[] | undefined) || [];
-     handleSettingsChange(listName, list.filter(item => item.id !== id));
-  };
-  
+    const testimonialManager = {
+      updateItem: (id: string, field: keyof Testimonial, value: any) => {
+        const updatedList = (settings.testimonials || []).map(item =>
+          item.id === id ? { ...item, [field]: value } : item
+        );
+        handleSettingsChange('testimonials', updatedList);
+      },
+      addItem: (newItem: Omit<Testimonial, 'id'>) => {
+        const itemWithId = { ...newItem, id: Date.now().toString() };
+        handleSettingsChange('testimonials', [...(settings.testimonials || []), itemWithId]);
+      },
+      removeItem: (id: string) => {
+        handleSettingsChange('testimonials', (settings.testimonials || []).filter(item => item.id !== id));
+      }
+    };
+
+    const topperManager = {
+      addItem: (newItem: Omit<Topper, 'id'>) => {
+        const itemWithId = { ...newItem, id: Date.now().toString() };
+        handleSettingsChange('toppers', [...(settings.toppers || []), itemWithId]);
+      },
+      removeItem: (id: string) => {
+        handleSettingsChange('toppers', (settings.toppers || []).filter(item => item.id !== id));
+      }
+    };
+
   const handleAddTopper = () => {
     if (newTopper.name && newTopper.grade && newTopper.marks) {
-        addListItem('toppers', { ...newTopper, id: Date.now().toString() });
+        topperManager.addItem(newTopper);
         setNewTopper({ name: '', grade: '', marks: '' });
     } else {
         toast({ variant: 'destructive', title: 'Error', description: 'Please fill all fields for the new topper.' });
@@ -372,12 +422,12 @@ export default function SettingsPage() {
                         <div className="space-y-2">
                         {(settings.features || []).map(feature => (
                             <div key={feature.id} className="flex items-center gap-2">
-                                <Input value={feature.text} onChange={e => handleListItemChange('features', feature.id, 'text', e.target.value)} />
-                                <Button variant="ghost" size="icon" onClick={() => removeListItem('features', feature.id)}><XCircle className="text-destructive" /></Button>
+                                <Input value={feature.text} onChange={e => featureManager.updateItem(feature.id, 'text', e.target.value)} />
+                                <Button variant="ghost" size="icon" onClick={() => featureManager.removeItem(feature.id)}><XCircle className="text-destructive" /></Button>
                             </div>
                         ))}
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => addListItem('features', {id: Date.now().toString(), text: ''})}>
+                        <Button variant="outline" size="sm" onClick={() => featureManager.addItem({text: ''})}>
                             <PlusCircle className="mr-2 h-4 w-4"/> Add Feature
                         </Button>
                     </div>
@@ -460,12 +510,12 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                     {(settings.announcements || []).map(item => (
                         <div key={item.id} className="flex items-center gap-2">
-                            <Input value={item.text} onChange={e => handleListItemChange('announcements', item.id, 'text', e.target.value)} />
-                            <Button variant="ghost" size="icon" onClick={() => removeListItem('announcements', item.id)}><XCircle className="text-destructive" /></Button>
+                            <Input value={item.text} onChange={e => announcementManager.updateItem(item.id, 'text', e.target.value)} />
+                            <Button variant="ghost" size="icon" onClick={() => announcementManager.removeItem(item.id)}><XCircle className="text-destructive" /></Button>
                         </div>
                     ))}
                     </div>
-                     <Button variant="outline" size="sm" onClick={() => addListItem('announcements', {id: Date.now().toString(), text: ''})}>
+                     <Button variant="outline" size="sm" onClick={() => announcementManager.addItem({text: ''})}>
                         <PlusCircle className="mr-2 h-4 w-4"/> Add Announcement
                     </Button>
                 </CardContent>
@@ -476,26 +526,26 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                     {(settings.events || []).map(event => (
                         <div key={event.id} className="p-4 border rounded-lg space-y-2 relative">
-                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeListItem('events', event.id)}>
+                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => eventManager.removeItem(event.id)}>
                                 <XCircle className="text-destructive" />
                             </Button>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div className="space-y-1">
                                     <Label>Date</Label>
-                                    <Input value={event.date} onChange={e => handleListItemChange('events', event.id, 'date', e.target.value)} placeholder="e.g. NOV 25"/>
+                                    <Input value={event.date} onChange={e => eventManager.updateItem(event.id, 'date', e.target.value)} placeholder="e.g. NOV 25"/>
                                 </div>
                                  <div className="space-y-1 col-span-2">
                                     <Label>Title</Label>
-                                    <Input value={event.title} onChange={e => handleListItemChange('events', event.id, 'title', e.target.value)} />
+                                    <Input value={event.title} onChange={e => eventManager.updateItem(event.id, 'title', e.target.value)} />
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <Label>Description</Label>
-                                <Textarea value={event.description} onChange={e => handleListItemChange('events', event.id, 'description', e.target.value)} />
+                                <Textarea value={event.description} onChange={e => eventManager.updateItem(event.id, 'description', e.target.value)} />
                             </div>
                         </div>
                     ))}
-                     <Button variant="outline" size="sm" onClick={() => addListItem('events', {id: Date.now().toString(), date: '', title: '', description: ''})}>
+                     <Button variant="outline" size="sm" onClick={() => eventManager.addItem({ date: '', title: '', description: ''})}>
                         <PlusCircle className="mr-2 h-4 w-4"/> Add Event
                     </Button>
                 </CardContent>
@@ -506,30 +556,30 @@ export default function SettingsPage() {
                 <CardContent className="space-y-4">
                      {(settings.testimonials || []).map(item => (
                         <div key={item.id} className="p-4 border rounded-lg space-y-2 relative">
-                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeListItem('testimonials', item.id)}>
+                             <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => testimonialManager.removeItem(item.id)}>
                                 <XCircle className="text-destructive" />
                             </Button>
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                  <div className="space-y-1">
                                     <Label>Name</Label>
-                                    <Input value={item.name} onChange={e => handleListItemChange('testimonials', item.id, 'name', e.target.value)}/>
+                                    <Input value={item.name} onChange={e => testimonialManager.updateItem(item.id, 'name', e.target.value)}/>
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Role</Label>
-                                    <Input value={item.role} onChange={e => handleListItemChange('testimonials', item.id, 'role', e.target.value)}/>
+                                    <Input value={item.role} onChange={e => testimonialManager.updateItem(item.id, 'role', e.target.value)}/>
                                 </div>
                                 <div className="space-y-1">
                                     <Label>Avatar Text</Label>
-                                    <Input value={item.avatar} onChange={e => handleListItemChange('testimonials', item.id, 'avatar', e.target.value)} placeholder="e.g. JD"/>
+                                    <Input value={item.avatar} onChange={e => testimonialManager.updateItem(item.id, 'avatar', e.target.value)} placeholder="e.g. JD"/>
                                 </div>
                             </div>
                             <div className="space-y-1">
                                 <Label>Testimonial Text</Label>
-                                <Textarea value={item.text} onChange={e => handleListItemChange('testimonials', item.id, 'text', e.target.value)} />
+                                <Textarea value={item.text} onChange={e => testimonialManager.updateItem(item.id, 'text', e.target.value)} />
                             </div>
                         </div>
                     ))}
-                    <Button variant="outline" size="sm" onClick={() => addListItem('testimonials', {id: Date.now().toString(), name: '', role: '', avatar: '', text: ''})}>
+                    <Button variant="outline" size="sm" onClick={() => testimonialManager.addItem({name: '', role: '', avatar: '', text: ''})}>
                         <PlusCircle className="mr-2 h-4 w-4"/> Add Testimonial
                     </Button>
                 </CardContent>
@@ -615,7 +665,7 @@ export default function SettingsPage() {
                             (settings.toppers || []).map(topper => (
                                 <div key={topper.id} className="flex justify-between items-center bg-secondary p-2 rounded-md">
                                     <p className="text-sm">{topper.name} ({topper.grade}) - {topper.marks}</p>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeListItem('toppers', topper.id)}>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => topperManager.removeItem(topper.id)}>
                                         <XCircle className="h-4 w-4 text-destructive"/>
                                     </Button>
                                 </div>
