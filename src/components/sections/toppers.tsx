@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Award } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { db, Topper } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
   Carousel,
@@ -21,6 +22,7 @@ export function Toppers() {
   React.useEffect(() => {
     async function loadToppers() {
       setIsLoading(true);
+      await persistencePromise;
       const savedToppers = await db.getToppers();
       setToppers(savedToppers);
       setIsLoading(false);

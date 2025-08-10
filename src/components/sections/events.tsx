@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, ArrowRight } from "lucide-react";
 import { db, Event } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function Events() {
@@ -14,6 +15,7 @@ export function Events() {
   React.useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      await persistencePromise;
       const settings = await db.getSettings();
       setEvents(settings.events || []);
       setIsLoading(false);

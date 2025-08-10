@@ -6,6 +6,7 @@ import { MapPin, Phone, Mail } from 'lucide-react';
 import * as React from 'react';
 import Image from 'next/image';
 import { db } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function Location() {
@@ -15,6 +16,7 @@ export function Location() {
   React.useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      await persistencePromise;
       const siteSettings = await db.getSettings();
       setSettings(siteSettings);
       setIsLoading(false);

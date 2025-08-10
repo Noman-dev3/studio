@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { AdminLayout } from '@/components/layout/admin-layout';
 import { db, Topper, StudentResult, SiteSettings, Feature, Announcement, Event, Testimonial, GalleryImage, defaultSettings } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import Papa from 'papaparse';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Image from 'next/image';
@@ -28,26 +29,33 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = React.useState(false);
 
   React.useEffect(() => {
-    const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
-    if (isAuthenticated !== 'true') {
-      router.replace('/admin/login');
-      return;
-    }
+    const checkAuthAndFetch = async () => {
+      await persistencePromise;
+      const isAuthenticated = localStorage.getItem('isAdminAuthenticated');
+      if (isAuthenticated !== 'true') {
+        router.replace('/admin/login');
+        return;
+      }
 
-    const fetchSettings = async () => {
-        setIsLoading(true);
-        try {
-            const savedSettings = await db.getSettings();
-            setSettings(savedSettings);
-        } catch (error) {
-            console.error("Failed to fetch settings:", error);
-            toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
-        } finally {
-            setIsLoading(false);
-        }
-    }
-    fetchSettings();
+      setIsLoading(true);
+      try {
+          const savedSettings = await db.getSettings();
+          // Deep merge to ensure all nested objects have default values
+          setSettings(prev => ({
+              ...prev,
+              ...savedSettings,
+              socials: { ...prev.socials, ...savedSettings.socials },
+              images: { ...prev.images, ...savedSettings.images }
+          }));
+      } catch (error) {
+          console.error("Failed to fetch settings:", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to load settings data.' });
+      } finally {
+          setIsLoading(false);
+      }
+    };
 
+    checkAuthAndFetch();
   }, [router, toast]);
 
   const handleSettingsChange = (field: keyof SiteSettings, value: any) => {
@@ -354,7 +362,7 @@ export default function SettingsPage() {
                      <div className="space-y-2">
                         <Label>Features</Label>
                         <div className="space-y-2">
-                        {settings.features.map(feature => (
+                        {(settings.features || []).map(feature => (
                             <div key={feature.id} className="flex items-center gap-2">
                                 <Input value={feature.text} onChange={e => handleListItemChange('features', feature.id, 'text', e.target.value)} />
                                 <Button variant="ghost" size="icon" onClick={() => removeListItem('features', feature.id)}><XCircle className="text-destructive" /></Button>
@@ -420,19 +428,19 @@ export default function SettingsPage() {
                 <CardContent className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <Label htmlFor="facebook">Facebook URL</Label>
-                        <Input id="facebook" placeholder="https://facebook.com/your-page" value={settings.socials?.facebook} onChange={e => handleNestedChange('socials', 'facebook', e.target.value)} />
+                        <Input id="facebook" placeholder="https://facebook.com/your-page" value={settings.socials?.facebook || ''} onChange={e => handleNestedChange('socials', 'facebook', e.target.value)} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="twitter">Twitter URL</Label>
-                        <Input id="twitter" placeholder="https://twitter.com/your-handle" value={settings.socials?.twitter} onChange={e => handleNestedChange('socials', 'twitter', e.target.value)} />
+                        <Input id="twitter" placeholder="https://twitter.com/your-handle" value={settings.socials?.twitter || ''} onChange={e => handleNestedChange('socials', 'twitter', e.target.value)} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="instagram">Instagram URL</Label>
-                        <Input id="instagram" placeholder="https://instagram.com/your-account" value={settings.socials?.instagram} onChange={e => handleNestedChange('socials', 'instagram', e.target.value)} />
+                        <Input id="instagram" placeholder="https://instagram.com/your-account" value={settings.socials?.instagram || ''} onChange={e => handleNestedChange('socials', 'instagram', e.target.value)} />
                     </div>
                      <div className="space-y-2">
                         <Label htmlFor="linkedin">LinkedIn URL</Label>
-                        <Input id="linkedin" placeholder="https://linkedin.com/in/your-profile" value={settings.socials?.linkedin} onChange={e => handleNestedChange('socials', 'linkedin', e.target.value)} />
+                        <Input id="linkedin" placeholder="https://linkedin.com/in/your-profile" value={settings.socials?.linkedin || ''} onChange={e => handleNestedChange('socials', 'linkedin', e.target.value)} />
                     </div>
                 </CardContent>
             </Card>
@@ -442,7 +450,7 @@ export default function SettingsPage() {
                 <CardContent className="space-y-2">
                     <Label>Announcement Ticker Items</Label>
                     <div className="space-y-2">
-                    {settings.announcements.map(item => (
+                    {(settings.announcements || []).map(item => (
                         <div key={item.id} className="flex items-center gap-2">
                             <Input value={item.text} onChange={e => handleListItemChange('announcements', item.id, 'text', e.target.value)} />
                             <Button variant="ghost" size="icon" onClick={() => removeListItem('announcements', item.id)}><XCircle className="text-destructive" /></Button>
@@ -458,7 +466,7 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader><CardTitle>Events Section</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                    {settings.events.map(event => (
+                    {(settings.events || []).map(event => (
                         <div key={event.id} className="p-4 border rounded-lg space-y-2 relative">
                              <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeListItem('events', event.id)}>
                                 <XCircle className="text-destructive" />
@@ -488,7 +496,7 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader><CardTitle>Testimonials Section</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
-                     {settings.testimonials.map(item => (
+                     {(settings.testimonials || []).map(item => (
                         <div key={item.id} className="p-4 border rounded-lg space-y-2 relative">
                              <Button variant="ghost" size="icon" className="absolute top-2 right-2" onClick={() => removeListItem('testimonials', item.id)}>
                                 <XCircle className="text-destructive" />

@@ -1,7 +1,6 @@
-
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, enableMultiTabIndexedDbPersistence, initializeFirestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getFirestore, enableMultiTabIndexedDbPersistence, initializeFirestore, Firestore, CACHE_SIZE_UNLIMITED } from 'firebase/firestore';
 
 const firebaseConfig = {
   projectId: "piiss-bfh06",
@@ -12,25 +11,23 @@ const firebaseConfig = {
   messagingSenderId: "296152062569"
 };
 
-
 // Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+const app: FirebaseApp = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 
-// Initialize Firestore with persistence
-const db = initializeFirestore(app, {
+// Initialize Firestore but don't export it directly
+const db: Firestore = initializeFirestore(app, {
   cacheSizeBytes: CACHE_SIZE_UNLIMITED,
 });
 
-enableMultiTabIndexedDbPersistence(db).catch((err) => {
+// Create a promise that resolves when persistence is enabled
+const persistencePromise = enableMultiTabIndexedDbPersistence(db).catch((err) => {
   if (err.code == 'failed-precondition') {
-    // Multiple tabs open, persistence can only be enabled in one tab at a a time.
     console.warn('Firebase persistence failed: multiple tabs open.');
   } else if (err.code == 'unimplemented') {
-    // The current browser does not support all of the
-    // features required to enable persistence
-     console.warn('Firebase persistence failed: browser does not support it.');
+    console.warn('Firebase persistence failed: browser does not support it.');
   }
+  return err; // Resolve with the error if it fails, so the app doesn't hang
 });
 
-
-export { db, app };
+// Export the app, the db instance, and the promise
+export { db, app, persistencePromise };

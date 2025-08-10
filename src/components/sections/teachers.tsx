@@ -5,6 +5,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { db, Teacher } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function Teachers() {
@@ -14,6 +15,7 @@ export function Teachers() {
   React.useEffect(() => {
     async function loadTeachers() {
       setIsLoading(true);
+      await persistencePromise;
       const storedTeachers = await db.getTeachers();
       setTeachers(storedTeachers);
       setIsLoading(false);

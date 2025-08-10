@@ -2,6 +2,7 @@
 'use client';
 import * as React from 'react';
 import { db } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function PiissLogo(props: React.SVGProps<SVGSVGElement>) {
@@ -11,6 +12,7 @@ export function PiissLogo(props: React.SVGProps<SVGSVGElement>) {
   React.useEffect(() => {
     const fetchSettings = async () => {
       setIsLoading(true);
+      await persistencePromise;
       const settings = await db.getSettings();
       // Use abbreviation or short name for logo
       const name = settings.schoolName || 'PIISS';

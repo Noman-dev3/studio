@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle } from 'lucide-react';
 import { db, SiteSettings, Feature } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function About() {
@@ -14,6 +15,7 @@ export function About() {
   React.useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      await persistencePromise;
       const siteSettings = await db.getSettings();
       setSettings(siteSettings);
       setIsLoading(false);

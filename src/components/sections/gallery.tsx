@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { db, GalleryImage } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function Gallery() {
@@ -13,6 +14,7 @@ export function Gallery() {
   React.useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      await persistencePromise;
       const settings = await db.getSettings();
       setImages(settings.images.gallery || []);
       setIsLoading(false);

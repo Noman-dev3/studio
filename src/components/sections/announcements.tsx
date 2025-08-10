@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Megaphone } from 'lucide-react';
 import { db, Announcement } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 
 export function Announcements() {
   const [announcements, setAnnouncements] = React.useState<Announcement[]>([]);
@@ -11,6 +12,7 @@ export function Announcements() {
   React.useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      await persistencePromise;
       const settings = await db.getSettings();
       setAnnouncements(settings.announcements || []);
       setIsLoading(false);

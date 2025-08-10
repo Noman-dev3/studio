@@ -3,6 +3,7 @@
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { db } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import React from 'react';
 
 export default function RootLayout({
@@ -15,6 +16,7 @@ export default function RootLayout({
 
   React.useEffect(() => {
     const fetchSettings = async () => {
+      await persistencePromise;
       const settings = await db.getSettings();
       setTitle(settings.schoolName);
       setDescription(settings.heroSubtitle);

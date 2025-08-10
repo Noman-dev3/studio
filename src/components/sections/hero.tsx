@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { db } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function Hero() {
@@ -17,6 +18,7 @@ export function Hero() {
   React.useEffect(() => {
     const fetchSettings = async () => {
       setIsLoading(true);
+      await persistencePromise;
       const settings = await db.getSettings();
       setTitle(settings.heroTitle);
       setSubtitle(settings.heroSubtitle);

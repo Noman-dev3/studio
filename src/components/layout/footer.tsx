@@ -6,6 +6,7 @@ import { PiissLogo } from "@/components/icons/piiss-logo";
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin } from "lucide-react";
 import Link from "next/link";
 import { db, SiteSettings } from '@/lib/db';
+import { persistencePromise } from '@/lib/firebase';
 import { Skeleton } from '../ui/skeleton';
 
 export function Footer() {
@@ -15,6 +16,7 @@ export function Footer() {
   React.useEffect(() => {
     async function loadData() {
       setIsLoading(true);
+      await persistencePromise;
       const siteSettings = await db.getSettings();
       setSettings(siteSettings);
       setIsLoading(false);
