@@ -13,17 +13,27 @@ export function Footer() {
     phone: '',
     address: '',
   });
+  const [socials, setSocials] = React.useState({
+    facebook: '#',
+    twitter: '#',
+    instagram: '#',
+    linkedin: '#',
+  });
 
   React.useEffect(() => {
-    async function loadContactInfo() {
+    async function loadData() {
       // In a real app, this might come from settings, but for now we keep it in .env for server-side access
       setContactInfo({
         email: process.env.NEXT_PUBLIC_CONTACT_EMAIL || 'contact@example.com',
         phone: process.env.NEXT_PUBLIC_CONTACT_PHONE || '+1 (234) 567-890',
         address: process.env.NEXT_PUBLIC_CONTACT_ADDRESS || '123 Education Lane, Knowledge City, 12345',
       });
+      const settings = await db.getSettings();
+      if(settings.socials) {
+        setSocials(settings.socials);
+      }
     }
-    loadContactInfo();
+    loadData();
   }, []);
 
   return (
@@ -58,10 +68,10 @@ export function Footer() {
           <div>
             <h3 className="text-lg font-semibold text-primary dark:text-primary-foreground mb-4">Follow Us</h3>
             <div className="flex space-x-4">
-              <Link href="#" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Facebook /></Link>
-              <Link href="#" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Twitter /></Link>
-              <Link href="#" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Instagram /></Link>
-              <Link href="#" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Linkedin /></Link>
+              <Link href={socials.facebook} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Facebook /></Link>
+              <Link href={socials.twitter} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Twitter /></Link>
+              <Link href={socials.instagram} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Instagram /></Link>
+              <Link href={socials.linkedin} target="_blank" rel="noopener noreferrer" className="text-secondary-foreground hover:text-primary dark:hover:text-primary-foreground transition-colors"><Linkedin /></Link>
             </div>
           </div>
         </div>

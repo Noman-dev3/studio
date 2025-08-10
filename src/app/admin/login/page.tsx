@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -13,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import { PiissLogo } from '@/components/icons/piiss-logo';
 import Link from 'next/link';
+import { db } from '@/lib/db';
 
 const loginSchema = z.object({
   username: z.string().min(1, { message: 'Username is required.' }),
@@ -25,17 +27,23 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isClient, setIsClient] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { username: '', password: '' },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
-    // IMPORTANT: This is a basic, insecure login for demonstration purposes.
-    // In a real application, you must use a proper authentication service.
-    if (data.username === 'admin' && data.password === 'password') {
+
+    const settings = await db.getSettings();
+
+    if (data.username === settings.adminUsername && data.password === settings.adminPassword) {
       localStorage.setItem('isAdminAuthenticated', 'true');
       toast({
         title: 'Login Successful',
@@ -51,6 +59,10 @@ export default function AdminLoginPage() {
       setIsLoading(false);
     }
   };
+
+  if (!isClient) {
+    return null; // Or a loading spinner
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-secondary p-4">
@@ -102,7 +114,7 @@ export default function AdminLoginPage() {
         </CardContent>
       </Card>
       <p className="mt-4 text-xs text-muted-foreground">
-        Hint: Use <strong>admin</strong> / <strong>password</strong> to log in.
+        Use the credentials from the settings page to log in.
       </p>
     </div>
   );

@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
-import { Upload, PlusCircle, XCircle, Info, Save, Loader2 } from 'lucide-react';
+import { Upload, PlusCircle, XCircle, Info, Save, Loader2, KeyRound, Link as LinkIcon } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -54,6 +54,18 @@ export default function SettingsPage() {
         setSettings({ ...settings, [field]: value });
     }
   };
+
+  const handleSocialChange = (platform: keyof SiteSettings['socials'], value: string) => {
+    if (settings) {
+      setSettings({
+        ...settings,
+        socials: {
+          ...settings.socials,
+          [platform]: value,
+        }
+      })
+    }
+  }
 
   const handleListItemChange = <T extends { id: string }>(
     list: T[],
@@ -177,7 +189,7 @@ export default function SettingsPage() {
                 <Info className="h-4 w-4" />
                 <AlertTitle>Configuration Change</AlertTitle>
                 <AlertDescription>
-                    Contact information (email, phone, address) and Google Maps API key are now managed in the <code>.env</code> file for better security and server-side access.
+                    Contact information (email, phone, address) and email server settings are now managed in the <code>.env</code> file for better security and server-side access.
                 </AlertDescription>
             </Alert>
 
@@ -189,6 +201,23 @@ export default function SettingsPage() {
                     <div className="space-y-2">
                         <Label htmlFor="schoolName">School Name</Label>
                         <Input id="schoolName" value={settings.schoolName} onChange={e => handleSettingsChange('schoolName', e.target.value)} />
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><KeyRound/>Admin Credentials</CardTitle>
+                    <CardDescription>Change the username and password for accessing this admin dashboard.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="adminUsername">Admin Username</Label>
+                        <Input id="adminUsername" value={settings.adminUsername} onChange={e => handleSettingsChange('adminUsername', e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="adminPassword">Admin Password</Label>
+                        <Input id="adminPassword" type="password" value={settings.adminPassword} onChange={e => handleSettingsChange('adminPassword', e.target.value)} />
                     </div>
                 </CardContent>
             </Card>
@@ -231,6 +260,31 @@ export default function SettingsPage() {
                         <Button variant="outline" size="sm" onClick={() => handleSettingsChange('features', addListItem(settings.features, {id: Date.now().toString(), text: ''}))}>
                             <PlusCircle className="mr-2 h-4 w-4"/> Add Feature
                         </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2"><LinkIcon/>Social Media Links</CardTitle>
+                    <CardDescription>Enter the full URLs for your social media profiles.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="facebook">Facebook URL</Label>
+                        <Input id="facebook" placeholder="https://facebook.com/your-page" value={settings.socials.facebook} onChange={e => handleSocialChange('facebook', e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="twitter">Twitter URL</Label>
+                        <Input id="twitter" placeholder="https://twitter.com/your-handle" value={settings.socials.twitter} onChange={e => handleSocialChange('twitter', e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="instagram">Instagram URL</Label>
+                        <Input id="instagram" placeholder="https://instagram.com/your-account" value={settings.socials.instagram} onChange={e => handleSocialChange('instagram', e.target.value)} />
+                    </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="linkedin">LinkedIn URL</Label>
+                        <Input id="linkedin" placeholder="https://linkedin.com/in/your-profile" value={settings.socials.linkedin} onChange={e => handleSocialChange('linkedin', e.target.value)} />
                     </div>
                 </CardContent>
             </Card>

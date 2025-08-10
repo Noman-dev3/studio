@@ -98,6 +98,14 @@ export interface SiteSettings {
   features: Feature[];
   events: Event[];
   testimonials: Testimonial[];
+  adminUsername: string;
+  adminPassword: string;
+  socials: {
+    facebook: string;
+    twitter: string;
+    instagram: string;
+    linkedin: string;
+  };
 }
 
 
@@ -152,7 +160,15 @@ const defaultSettings: SiteSettings = {
         { id: '1', name: "The Rahman Family", role: "Parent", avatar: "RF", text: "PIISS has been a blessing for our children. The blend of high-quality education and Islamic teachings is exactly what we were looking for. The teachers are caring and professional." },
         { id: '2', name: "Ali Abdullah", role: "Alumnus, Class of 2022", avatar: "AA", text: "My time at PIISS prepared me not just for university but for life. I developed a strong sense of identity and purpose. I am forever grateful to my teachers and peers." },
         { id: '3', name: "The Siddiqui Family", role: "Parent", avatar: "SF", text: "We are impressed by the school's commitment to excellence in all areas. The facilities are wonderful, and there's a strong sense of community. Highly recommended." },
-    ]
+    ],
+    adminUsername: 'admin',
+    adminPassword: 'password',
+    socials: {
+        facebook: '#',
+        twitter: '#',
+        instagram: '#',
+        linkedin: '#'
+    }
 };
 
 
