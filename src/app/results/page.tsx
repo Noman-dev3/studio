@@ -13,15 +13,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Search, XCircle, FileSpreadsheet, User, Hash } from 'lucide-react';
+import { Loader2, Search, XCircle, FileSpreadsheet, User, Hash, School } from 'lucide-react';
 import { checkResult } from '@/app/actions';
 import { StudentResult } from '@/lib/db';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 
 const resultCheckSchema = z.object({
-  rollNumber: z.string().min(1, { message: 'Roll number is required.' }),
+  rollNumber: z.string().optional(),
+  name: z.string().optional(),
+  className: z.string().optional(),
+}).refine(data => !!data.rollNumber || (!!data.name && !!data.className), {
+    message: "Please enter either a Roll Number, or both Name and Class.",
+    path: ["rollNumber"],
 });
+
 
 type ResultCheckFormValues = z.infer<typeof resultCheckSchema>;
 
@@ -33,7 +39,7 @@ export default function ResultsPage() {
 
   const form = useForm<ResultCheckFormValues>({
     resolver: zodResolver(resultCheckSchema),
-    defaultValues: { rollNumber: '' },
+    defaultValues: { rollNumber: '', name: '', className: '' },
   });
 
   const onSubmit = async (data: ResultCheckFormValues) => {
@@ -70,12 +76,12 @@ export default function ResultsPage() {
             <div className="max-w-3xl mx-auto text-center">
               <h1 className="text-3xl md:text-4xl font-bold text-primary tracking-tight">Check Your Result</h1>
               <p className="mt-4 text-lg text-muted-foreground">
-                Enter your roll number below to view your report card.
+                Enter your details below to view your report card.
               </p>
             </div>
-            <Card className="max-w-md mx-auto mt-12">
+            <Card className="max-w-lg mx-auto mt-12">
                 <CardHeader>
-                    <CardTitle>Enter Your Details</CardTitle>
+                    <CardTitle>Enter Student Details</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <Form {...form}>
@@ -85,7 +91,7 @@ export default function ResultsPage() {
                             name="rollNumber"
                             render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Roll Number</FormLabel>
+                                <FormLabel>Roll Number (optional)</FormLabel>
                                 <FormControl>
                                     <Input placeholder="e.g., PIISS-101" {...field} />
                                 </FormControl>
@@ -93,6 +99,35 @@ export default function ResultsPage() {
                             </FormItem>
                             )}
                         />
+                        <div className="text-center text-sm text-muted-foreground font-semibold">OR</div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FormField
+                                control={form.control}
+                                name="name"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Student Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Ali Khan" {...field} />
+                                    </FormControl>
+                                     <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="className"
+                                render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Class</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g., Grade 10" {...field} />
+                                    </FormControl>
+                                     <FormMessage />
+                                </FormItem>
+                                )}
+                            />
+                        </div>
                         <Button type="submit" className="w-full" disabled={isLoading}>
                             {isLoading ? <Loader2 className="mr-2 animate-spin" /> : <Search className="mr-2"/>}
                             Check Result
@@ -132,7 +167,7 @@ export default function ResultsPage() {
                             </div>
                        </div>
                        <div className="flex items-center gap-2">
-                            <User className="h-5 w-5 text-primary"/>
+                            <School className="h-5 w-5 text-primary"/>
                              <div>
                                 <p className="font-semibold">Class</p>
                                 <p className="text-muted-foreground">{result.class}</p>
@@ -195,7 +230,7 @@ export default function ResultsPage() {
                     <XCircle className="h-16 w-16 text-destructive mb-4"/>
                     <h3 className="text-xl font-semibold">No Result Found</h3>
                     <p className="text-muted-foreground mt-2 max-w-md">
-                        We could not find a report card for the roll number you entered. Please verify the number and try again.
+                        We could not find a report card for the details you entered. Please verify the information and try again.
                     </p>
                 </div>
             )}

@@ -137,10 +137,20 @@ export const db = {
   getResults: async (): Promise<StudentResult[]> => {
       return Promise.resolve(getFromLocalStorage<StudentResult[]>('results', []));
   },
-  getResultByRollNumber: async (rollNumber: string): Promise<StudentResult | null> => {
+  getResult: async (query: { rollNumber?: string; name?: string; className?: string }): Promise<StudentResult | null> => {
       const results = await db.getResults();
-      const result = results.find(r => r.roll_number === rollNumber) || null;
-      return Promise.resolve(result);
+      let result: StudentResult | undefined;
+
+      if (query.rollNumber) {
+          result = results.find(r => r.roll_number.toLowerCase() === query.rollNumber!.toLowerCase());
+      } else if (query.name && query.className) {
+          result = results.find(r => 
+              r.student_name.toLowerCase() === query.name!.toLowerCase() &&
+              r.class.toLowerCase() === query.className!.toLowerCase()
+          );
+      }
+      
+      return Promise.resolve(result || null);
   },
   saveResult: async (result: StudentResult): Promise<void> => {
     let results = await db.getResults();
